@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "pledge",
-    "slug": "pledge",
+    "name": "Pledge - Habit Accountability",
+    "slug": "pledge-habits",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,20 +10,29 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#4F46E5"
     },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pledge.habits"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#4F46E5"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.pledge.habits",
+      "permissions": ["NOTIFICATIONS", "SCHEDULE_EXACT_ALARM"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": ["expo-notifications"],
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#4F46E5"
     }
   }
 }
