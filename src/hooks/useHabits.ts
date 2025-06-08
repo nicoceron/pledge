@@ -1,31 +1,87 @@
 import { useState, useEffect, useCallback } from "react";
-import { Habit, Payment } from "../types";
+import { Habit, Payment, MissReason, PendingReason } from "../types";
 import { StorageService } from "../services/storage";
+import { loadSampleData } from "../utils/sampleData";
 import {
   generateId,
   getDateString,
   isHabitDueToday,
   calculateStreak,
+  detectSlippedHabits,
 } from "../utils";
 
 export const useHabits = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pendingReasons, setPendingReasons] = useState<PendingReason[]>([]);
 
   const loadHabits = useCallback(async () => {
     try {
       setLoading(true);
       const loadedHabits = await StorageService.getHabits();
-      setHabits(loadedHabits);
+
+      // If no habits exist, load sample data
+      if (loadedHabits.length === 0) {
+        try {
+          await loadSampleData();
+          const sampleHabits = await StorageService.getHabits();
+
+          // Ensure all habits have the new fields
+          const updatedHabits = sampleHabits.map((habit) => ({
+            ...habit,
+            pendingReasonDates: habit.pendingReasonDates || [],
+            missReasons: habit.missReasons || {},
+          }));
+
+          setHabits(updatedHabits);
+          setError(null);
+          return;
+        } catch (sampleError) {
+          console.error("Error loading sample data:", sampleError);
+          // Continue with empty habits if sample data fails
+        }
+      }
+
+      // Ensure all habits have the new fields
+      const updatedHabits = loadedHabits.map((habit) => ({
+        ...habit,
+        pendingReasonDates: habit.pendingReasonDates || [],
+        missReasons: habit.missReasons || {},
+      }));
+
+      setHabits(updatedHabits);
+
+      // Check for slipped habits
+      const slipped = detectSlippedHabits(updatedHabits);
+      if (slipped.length > 0) {
+        setPendingReasons(slipped);
+        // Mark these dates as pending reasons
+        await markDatesAsPendingReasons(slipped, updatedHabits);
+      }
+
       setError(null);
     } catch (err) {
+      console.error("Error loading habits:", err);
       setError("Failed to load habits");
-      console.error(err);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const markDatesAsPendingReasons = async (
+    pendingList: PendingReason[],
+    currentHabits: Habit[]
+  ) => {
+    for (const pending of pendingList) {
+      const habit = currentHabits.find((h) => h.id === pending.habitId);
+      if (habit) {
+        await updateHabit(pending.habitId, {
+          pendingReasonDates: [...habit.pendingReasonDates, pending.date],
+        });
+      }
+    }
+  };
 
   const addHabit = useCallback(
     async (
@@ -37,6 +93,8 @@ export const useHabits = () => {
         | "totalPledged"
         | "completedDates"
         | "missedDates"
+        | "pendingReasonDates"
+        | "missReasons"
       >
     ) => {
       try {
@@ -48,6 +106,8 @@ export const useHabits = () => {
           totalPledged: 0,
           completedDates: [],
           missedDates: [],
+          pendingReasonDates: [],
+          missReasons: {},
         };
 
         await StorageService.addHabit(newHabit);
@@ -110,8 +170,11 @@ export const useHabits = () => {
           completedDates: updatedCompletedDates,
           lastCompleted: new Date(),
           streak: newStreak,
-          // Remove from missed dates if it was there
+          // Remove from missed dates and pending reasons if it was there
           missedDates: habit.missedDates.filter((date) => date !== today),
+          pendingReasonDates: habit.pendingReasonDates.filter(
+            (date) => date !== today
+          ),
         });
       } catch (err) {
         setError("Failed to complete habit");
@@ -123,36 +186,111 @@ export const useHabits = () => {
   );
 
   const markHabitMissed = useCallback(
-    async (habitId: string) => {
+    async (
+      habitId: string,
+      reason?: MissReason["reason"],
+      customReason?: string
+    ) => {
       try {
         const habit = habits.find((h) => h.id === habitId);
         if (!habit) return;
 
         const today = getDateString(new Date());
-        if (habit.missedDates.includes(today)) {
-          // Already marked as missed
-          return;
+
+        if (reason) {
+          // User provided a reason immediately
+          const missReason: MissReason = {
+            reason,
+            customReason,
+            timestamp: new Date(),
+          };
+
+          // Create payment record
+          const payment: Payment = {
+            id: generateId(),
+            habitId,
+            amount: habit.pledgeAmount,
+            date: new Date(),
+            reason: `Missed habit: ${habit.title}`,
+            missReason,
+            status: "pending",
+          };
+
+          await StorageService.addPayment(payment);
+
+          await updateHabit(habitId, {
+            missedDates: [...habit.missedDates, today],
+            missReasons: { ...habit.missReasons, [today]: missReason },
+            totalPledged: habit.totalPledged + habit.pledgeAmount,
+            streak: 0, // Reset streak when habit is missed
+            // Remove from pending reasons if it was there
+            pendingReasonDates: habit.pendingReasonDates.filter(
+              (date) => date !== today
+            ),
+          });
+        } else {
+          // No reason provided, mark as pending
+          await updateHabit(habitId, {
+            pendingReasonDates: [...habit.pendingReasonDates, today],
+            // Remove from missed dates if it was there
+            missedDates: habit.missedDates.filter((date) => date !== today),
+          });
         }
+      } catch (err) {
+        setError("Failed to mark habit as missed");
+        console.error(err);
+        throw err;
+      }
+    },
+    [habits, updateHabit]
+  );
+
+  const provideMissReason = useCallback(
+    async (
+      habitId: string,
+      date: string,
+      reason: MissReason["reason"],
+      customReason?: string
+    ) => {
+      try {
+        const habit = habits.find((h) => h.id === habitId);
+        if (!habit) return;
+
+        const missReason: MissReason = {
+          reason,
+          customReason,
+          timestamp: new Date(),
+        };
 
         // Create payment record
         const payment: Payment = {
           id: generateId(),
           habitId,
           amount: habit.pledgeAmount,
-          date: new Date(),
+          date: new Date(date),
           reason: `Missed habit: ${habit.title}`,
+          missReason,
           status: "pending",
         };
 
         await StorageService.addPayment(payment);
 
         await updateHabit(habitId, {
-          missedDates: [...habit.missedDates, today],
+          missedDates: [...habit.missedDates, date],
+          missReasons: { ...habit.missReasons, [date]: missReason },
           totalPledged: habit.totalPledged + habit.pledgeAmount,
+          pendingReasonDates: habit.pendingReasonDates.filter(
+            (d) => d !== date
+          ),
           streak: 0, // Reset streak when habit is missed
         });
+
+        // Remove from pending reasons
+        setPendingReasons((prev) =>
+          prev.filter((p) => !(p.habitId === habitId && p.date === date))
+        );
       } catch (err) {
-        setError("Failed to mark habit as missed");
+        setError("Failed to provide miss reason");
         console.error(err);
         throw err;
       }
@@ -172,6 +310,10 @@ export const useHabits = () => {
     return habits.reduce((total, habit) => total + habit.totalPledged, 0);
   }, [habits]);
 
+  const getPendingReasons = useCallback(() => {
+    return pendingReasons;
+  }, [pendingReasons]);
+
   useEffect(() => {
     loadHabits();
   }, [loadHabits]);
@@ -180,14 +322,17 @@ export const useHabits = () => {
     habits,
     loading,
     error,
+    pendingReasons,
     addHabit,
     updateHabit,
     deleteHabit,
     completeHabit,
     markHabitMissed,
+    provideMissReason,
     getTodaysHabits,
     getActiveHabits,
     getTotalPledgedAmount,
+    getPendingReasons,
     refresh: loadHabits,
   };
 };

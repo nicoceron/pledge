@@ -2,6 +2,7 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { TabParamList } from "../types";
+import { theme } from "../utils/theme";
 
 // Import screens (we'll create these next)
 import { HomeScreen } from "../screens/HomeScreen";
@@ -35,29 +36,37 @@ export const TabNavigator: React.FC = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: "#4F46E5",
-        tabBarInactiveTintColor: "#9CA3AF",
+        tabBarActiveTintColor: theme.colors.primary.main,
+        tabBarInactiveTintColor: theme.colors.text.light,
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
-          borderTopColor: "#E5E7EB",
+          backgroundColor: theme.colors.background.card,
+          borderTopColor: theme.colors.border.light,
           borderTopWidth: 1,
           paddingBottom: 8,
           paddingTop: 8,
           height: 88,
+          shadowColor: theme.colors.shadow.color,
+          shadowOffset: {
+            width: 0,
+            height: -2,
+          },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+          elevation: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: "600",
+          fontSize: theme.typography.size.sm,
+          fontWeight: theme.typography.weight.semibold as any,
         },
         headerStyle: {
-          backgroundColor: "#4F46E5",
+          backgroundColor: theme.colors.primary.main,
           shadowColor: "transparent",
           elevation: 0,
         },
-        headerTintColor: "#FFFFFF",
+        headerTintColor: theme.colors.text.inverse,
         headerTitleStyle: {
-          fontWeight: "700",
-          fontSize: 18,
+          fontWeight: theme.typography.weight.bold as any,
+          fontSize: theme.typography.size.xl,
         },
       })}
     >
@@ -66,7 +75,7 @@ export const TabNavigator: React.FC = () => {
         component={HomeScreen}
         options={{
           title: "Today",
-          headerTitle: "Pledge - Today's Habits",
+          headerTitle: "🌟 Pledge - Your Journey",
         }}
       />
       <Tab.Screen
@@ -74,7 +83,7 @@ export const TabNavigator: React.FC = () => {
         component={HabitsScreen}
         options={{
           title: "Habits",
-          headerTitle: "My Habits",
+          headerTitle: "💪 My Habits",
         }}
       />
       <Tab.Screen
@@ -82,7 +91,7 @@ export const TabNavigator: React.FC = () => {
         component={AnalyticsScreen}
         options={{
           title: "Analytics",
-          headerTitle: "Analytics",
+          headerTitle: "📊 Your Progress",
         }}
       />
       <Tab.Screen
@@ -90,7 +99,7 @@ export const TabNavigator: React.FC = () => {
         component={SettingsScreen}
         options={{
           title: "Settings",
-          headerTitle: "Settings",
+          headerTitle: "⚙️ Settings",
         }}
       />
     </Tab.Navigator>

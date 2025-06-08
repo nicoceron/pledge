@@ -2,7 +2,11 @@ export interface Habit {
   id: string;
   title: string;
   description: string;
-  frequency: "daily" | "weekly" | "monthly";
+  frequency: "daily" | "weekly" | "monthly" | "custom";
+  customFrequency?: {
+    timesPerWeek?: number;
+    daysOfWeek?: number[]; // 0=Sunday, 1=Monday, etc.
+  };
   pledgeAmount: number;
   isActive: boolean;
   createdAt: Date;
@@ -11,6 +15,20 @@ export interface Habit {
   totalPledged: number;
   completedDates: string[];
   missedDates: string[];
+  pendingReasonDates: string[]; // Dates that need reasons
+  missReasons: { [date: string]: MissReason }; // Date -> reason mapping
+}
+
+export interface MissReason {
+  reason:
+    | "stressed"
+    | "distracted"
+    | "no_time"
+    | "sick"
+    | "emergency"
+    | "other";
+  customReason?: string;
+  timestamp: Date;
 }
 
 export interface User {
@@ -21,6 +39,7 @@ export interface User {
   totalCharged: number;
   activeHabits: number;
   joinedAt: Date;
+  lastAppOpen: Date; // Track when app was last opened
 }
 
 export interface Payment {
@@ -29,6 +48,7 @@ export interface Payment {
   amount: number;
   date: Date;
   reason: string;
+  missReason?: MissReason; // Why the habit was missed
   status: "pending" | "completed" | "failed";
 }
 
@@ -38,6 +58,13 @@ export interface HabitLog {
   date: string;
   completed: boolean;
   note?: string;
+  missReason?: MissReason;
+}
+
+export interface PendingReason {
+  habitId: string;
+  date: string;
+  habitTitle: string;
 }
 
 export type RootStackParamList = {
@@ -45,6 +72,7 @@ export type RootStackParamList = {
   CreateHabit: undefined;
   HabitDetail: { habitId: string };
   Profile: undefined;
+  PendingReasons: { pendingReasons: PendingReason[] };
 };
 
 export type TabParamList = {
