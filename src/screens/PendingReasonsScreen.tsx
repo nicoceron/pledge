@@ -1,19 +1,10 @@
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-} from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { PendingReason, RootStackParamList, MissReason } from "../types";
 import { useHabits } from "../hooks/useHabits";
 import { formatCurrency, formatDate } from "../utils";
-import { theme } from "../utils/theme";
 
 type PendingReasonsRouteProp = RouteProp<RootStackParamList, "PendingReasons">;
 
@@ -116,338 +107,114 @@ export const PendingReasonsScreen: React.FC = () => {
   };
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: theme.colors.background.secondary },
-      ]}
-    >
-      <LinearGradient
-        colors={[theme.colors.primary.main, theme.colors.primary.light]}
-        style={styles.header}
-      >
-        <View style={styles.headerContent}>
-          <Ionicons name="heart" size={48} color={theme.colors.text.inverse} />
-          <Text
-            style={[styles.headerTitle, { color: theme.colors.text.inverse }]}
-          >
+    <View className="flex-1 bg-navy-50">
+      {/* Header */}
+      <View className="bg-navy-800 pt-4 pb-8 px-6">
+        <View className="items-center">
+          <Ionicons name="heart" size={48} color="white" />
+          <Text className="text-white text-2xl font-bold mt-4 mb-2 text-center">
             We're Here to Listen 💙
           </Text>
-          <Text
-            style={[
-              styles.headerSubtitle,
-              { color: theme.colors.text.inverse },
-            ]}
-          >
+          <Text className="text-navy-200 text-base text-center leading-6">
             Help us understand your journey so we can support you better - no
             judgment, just understanding
           </Text>
         </View>
-      </LinearGradient>
+      </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View
-          style={[
-            styles.infoCard,
-            { backgroundColor: theme.colors.background.card },
-          ]}
-        >
-          <View
-            style={[
-              styles.infoHeader,
-              { backgroundColor: theme.colors.pastel.blue },
-            ]}
-          >
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {/* Info Card */}
+        <View className="bg-white mx-4 mt-4 rounded-2xl border border-navy-100 overflow-hidden">
+          <View className="bg-pastel-info p-4 flex-row items-center">
             <Ionicons
               name="information-circle"
               size={24}
-              color={theme.colors.primary.main}
+              className="text-blue-600 mr-3"
             />
-            <Text
-              style={[styles.infoTitle, { color: theme.colors.primary.main }]}
-            >
+            <Text className="text-blue-800 text-lg font-bold">
               Why We Ask 🤗
             </Text>
           </View>
-          <Text
-            style={[styles.infoText, { color: theme.colors.text.secondary }]}
-          >
-            Understanding what makes habits challenging helps us provide better
-            support and insights for your journey. Your gentle accountability
-            pledge will still be processed, but sharing helps us learn together!
-            💪
-          </Text>
+          <View className="p-4">
+            <Text className="text-navy-600 text-base leading-6">
+              Understanding what makes habits challenging helps us provide
+              better support and insights for your journey. Your gentle
+              accountability pledge will still be processed, but sharing helps
+              us learn together! 💪
+            </Text>
+          </View>
         </View>
 
+        {/* Pending Reasons List */}
         {pendingReasons.map((pending, index) => {
           const habit = habits.find((h) => h.id === pending.habitId);
           return (
             <View
               key={`${pending.habitId}-${pending.date}`}
-              style={[
-                styles.pendingCard,
-                { backgroundColor: theme.colors.background.card },
-              ]}
+              className="bg-white mx-4 mt-4 rounded-2xl p-4 border border-navy-100"
             >
-              <View style={styles.pendingHeader}>
-                <Text
-                  style={[
-                    styles.pendingTitle,
-                    { color: theme.colors.text.primary },
-                  ]}
-                >
+              <View className="flex-row justify-between items-start mb-3">
+                <Text className="text-navy-900 text-lg font-bold flex-1 mr-3">
                   {pending.habitTitle}
                 </Text>
-                <View
-                  style={[
-                    styles.dateBadge,
-                    { backgroundColor: theme.colors.pastel.purple },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.pendingDate,
-                      { color: theme.colors.primary.main },
-                    ]}
-                  >
-                    {formatDate(new Date(pending.date))}
+                <View className="bg-pastel-warning rounded-full px-3 py-1">
+                  <Text className="text-yellow-700 text-xs font-semibold">
+                    Pending
                   </Text>
                 </View>
               </View>
 
+              <View className="flex-row items-center mb-3">
+                <Ionicons
+                  name="calendar"
+                  size={16}
+                  className="text-navy-500 mr-2"
+                />
+                <Text className="text-navy-600 text-sm">
+                  {formatDate(new Date(pending.date))}
+                </Text>
+              </View>
+
               {habit && (
-                <View
-                  style={[
-                    styles.pledgeContainer,
-                    { backgroundColor: theme.colors.pastel.orange },
-                  ]}
-                >
+                <View className="flex-row items-center mb-4">
                   <Ionicons
-                    name="wallet"
+                    name="card"
                     size={16}
-                    color={theme.colors.status.warning}
+                    className="text-navy-500 mr-2"
                   />
-                  <Text
-                    style={[
-                      styles.pendingPledge,
-                      { color: theme.colors.status.warning },
-                    ]}
-                  >
-                    Gentle reminder: {formatCurrency(habit.pledgeAmount)}{" "}
-                    accountability investment
+                  <Text className="text-navy-600 text-sm">
+                    Pledge: {formatCurrency(habit.pledgeAmount)}
                   </Text>
                 </View>
               )}
 
               <TouchableOpacity
-                style={styles.provideReasonButton}
+                className="bg-navy-600 rounded-xl p-4 flex-row items-center justify-center"
                 onPress={() => handleProvideReason(pending)}
               >
-                <LinearGradient
-                  colors={[
-                    theme.colors.primary.main,
-                    theme.colors.primary.light,
-                  ]}
-                  style={styles.buttonGradient}
-                >
-                  <Ionicons
-                    name="chatbubble-ellipses"
-                    size={20}
-                    color={theme.colors.text.inverse}
-                  />
-                  <Text
-                    style={[
-                      styles.buttonText,
-                      { color: theme.colors.text.inverse },
-                    ]}
-                  >
-                    💭 Share What Happened
-                  </Text>
-                </LinearGradient>
+                <Ionicons name="chatbubble-ellipses" size={20} color="white" />
+                <Text className="text-white text-base font-semibold ml-2">
+                  💭 Share What Happened
+                </Text>
               </TouchableOpacity>
             </View>
           );
         })}
 
-        <View style={styles.actionContainer}>
+        {/* Skip All Button */}
+        <View className="px-4 mt-6 mb-8">
           <TouchableOpacity
-            style={[
-              styles.skipButton,
-              { backgroundColor: theme.colors.pastel.gray },
-            ]}
+            className="bg-navy-200 rounded-xl p-4 items-center"
             onPress={handleSkipAll}
           >
-            <Ionicons
-              name="time"
-              size={20}
-              color={theme.colors.text.secondary}
-            />
-            <Text
-              style={[
-                styles.skipButtonText,
-                { color: theme.colors.text.secondary },
-              ]}
-            >
-              ⏸️ I'll share later
+            <Text className="text-navy-700 text-base font-medium">
+              ⏸️ I'll share these later
             </Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.bottomSpacing} />
+        <View className="h-20" />
       </ScrollView>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    paddingTop: 60,
-    paddingBottom: 40,
-    paddingHorizontal: theme.spacing.xl,
-  },
-  headerContent: {
-    alignItems: "center",
-  },
-  headerTitle: {
-    fontSize: theme.typography.size.header,
-    fontWeight: theme.typography.weight.bold as any,
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.sm,
-    textAlign: "center",
-  },
-  headerSubtitle: {
-    fontSize: theme.typography.size.md,
-    textAlign: "center",
-    opacity: 0.9,
-    lineHeight: 22,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: theme.spacing.lg,
-  },
-  infoCard: {
-    marginTop: -20,
-    borderRadius: theme.borderRadius.xl,
-    shadowColor: theme.colors.shadow.color,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 6,
-    overflow: "hidden",
-    marginBottom: theme.spacing.xl,
-  },
-  infoHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    gap: theme.spacing.sm,
-  },
-  infoTitle: {
-    fontSize: theme.typography.size.lg,
-    fontWeight: theme.typography.weight.bold as any,
-  },
-  infoText: {
-    fontSize: theme.typography.size.md,
-    lineHeight: 24,
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.lg,
-    fontWeight: theme.typography.weight.normal as any,
-  },
-  pendingCard: {
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
-    shadowColor: theme.colors.shadow.color,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  pendingHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: theme.spacing.md,
-  },
-  pendingTitle: {
-    fontSize: theme.typography.size.xl,
-    fontWeight: theme.typography.weight.bold as any,
-    flex: 1,
-  },
-  dateBadge: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.md,
-  },
-  pendingDate: {
-    fontSize: theme.typography.size.sm,
-    fontWeight: theme.typography.weight.semibold as any,
-  },
-  pledgeContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.borderRadius.sm,
-    marginBottom: theme.spacing.md,
-    gap: theme.spacing.xs,
-  },
-  pendingPledge: {
-    fontSize: theme.typography.size.sm,
-    fontWeight: theme.typography.weight.medium as any,
-  },
-  provideReasonButton: {
-    borderRadius: theme.borderRadius.md,
-    overflow: "hidden",
-    shadowColor: theme.colors.shadow.color,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  buttonGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    gap: theme.spacing.sm,
-  },
-  buttonText: {
-    fontSize: theme.typography.size.md,
-    fontWeight: theme.typography.weight.semibold as any,
-  },
-  actionContainer: {
-    alignItems: "center",
-    marginTop: theme.spacing.lg,
-    marginBottom: theme.spacing.xl,
-  },
-  skipButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.xl,
-    borderRadius: theme.borderRadius.md,
-    gap: theme.spacing.sm,
-  },
-  skipButtonText: {
-    fontSize: theme.typography.size.md,
-    fontWeight: theme.typography.weight.medium as any,
-  },
-  bottomSpacing: {
-    height: theme.spacing.xxl,
-  },
-});

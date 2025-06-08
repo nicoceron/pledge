@@ -5,7 +5,6 @@ import { TabNavigator } from "./TabNavigator";
 import { RootStackParamList } from "../types";
 import { useHabits } from "../hooks/useHabits";
 import { PendingReasonsScreen } from "../screens/PendingReasonsScreen";
-import { theme } from "../utils/theme";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -27,13 +26,13 @@ export const AppNavigator: React.FC = () => {
           component={PendingReasonsScreen}
           options={{
             headerShown: true,
-            title: "💭 Share What Happened",
+            title: "Share What Happened",
             headerStyle: {
-              backgroundColor: theme.colors.primary.main,
+              backgroundColor: "#ffffff",
             },
-            headerTintColor: theme.colors.text.inverse,
+            headerTintColor: "#1f2937",
             headerTitleStyle: {
-              fontWeight: theme.typography.weight.bold as any,
+              fontWeight: "bold",
             },
             presentation: "modal",
           }}

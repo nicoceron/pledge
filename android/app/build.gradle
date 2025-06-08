@@ -87,13 +87,19 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.pledgehabitaccountability"
+    buildFeatures {
+        buildConfig true
+    }
+
+    namespace "com.pledge.habits"
     defaultConfig {
-        applicationId "com.pledgehabitaccountability"
+        applicationId "com.pledge.habits"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", newArchEnabled.toString()
+        buildConfigField "boolean", "IS_HERMES_ENABLED", hermesEnabled.toString()
     }
     signingConfigs {
         debug {

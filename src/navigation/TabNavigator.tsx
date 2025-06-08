@@ -2,7 +2,6 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { TabParamList } from "../types";
-import { theme } from "../utils/theme";
 
 // Import screens (we'll create these next)
 import { HomeScreen } from "../screens/HomeScreen";
@@ -27,46 +26,54 @@ export const TabNavigator: React.FC = () => {
               iconName = focused ? "list" : "list-outline";
               break;
             case "Analytics":
-              iconName = focused ? "bar-chart" : "bar-chart-outline";
+              iconName = focused ? "analytics" : "analytics-outline";
               break;
             case "Settings":
               iconName = focused ? "settings" : "settings-outline";
               break;
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return <Ionicons name={iconName} size={24} color={color} />;
         },
-        tabBarActiveTintColor: theme.colors.primary.main,
-        tabBarInactiveTintColor: theme.colors.text.light,
+        tabBarActiveTintColor: "#1f2937",
+        tabBarInactiveTintColor: "#6b7280",
         tabBarStyle: {
-          backgroundColor: theme.colors.background.card,
-          borderTopColor: theme.colors.border.light,
+          backgroundColor: "#ffffff",
+          borderTopColor: "#e5e7eb",
           borderTopWidth: 1,
           paddingBottom: 8,
           paddingTop: 8,
-          height: 88,
-          shadowColor: theme.colors.shadow.color,
+          height: 80,
+          shadowColor: "#000",
           shadowOffset: {
             width: 0,
-            height: -2,
+            height: -1,
           },
-          shadowOpacity: 0.08,
-          shadowRadius: 8,
-          elevation: 8,
+          shadowOpacity: 0.05,
+          shadowRadius: 4,
+          elevation: 4,
         },
         tabBarLabelStyle: {
-          fontSize: theme.typography.size.sm,
-          fontWeight: theme.typography.weight.semibold as any,
+          fontSize: 11,
+          fontWeight: "500",
+          marginTop: 4,
         },
         headerStyle: {
-          backgroundColor: theme.colors.primary.main,
-          shadowColor: "transparent",
-          elevation: 0,
+          backgroundColor: "#ffffff",
+          shadowColor: "#000",
+          shadowOffset: {
+            width: 0,
+            height: 1,
+          },
+          shadowOpacity: 0.05,
+          shadowRadius: 2,
+          elevation: 2,
         },
-        headerTintColor: theme.colors.text.inverse,
+        headerTintColor: "#1f2937",
         headerTitleStyle: {
-          fontWeight: theme.typography.weight.bold as any,
-          fontSize: theme.typography.size.xl,
+          fontWeight: "600",
+          fontSize: 20,
+          color: "#1f2937",
         },
       })}
     >
@@ -75,7 +82,7 @@ export const TabNavigator: React.FC = () => {
         component={HomeScreen}
         options={{
           title: "Today",
-          headerTitle: "🌟 Pledge - Your Journey",
+          headerTitle: "Today",
         }}
       />
       <Tab.Screen
@@ -83,7 +90,7 @@ export const TabNavigator: React.FC = () => {
         component={HabitsScreen}
         options={{
           title: "Habits",
-          headerTitle: "💪 My Habits",
+          headerTitle: "Habits",
         }}
       />
       <Tab.Screen
@@ -91,7 +98,7 @@ export const TabNavigator: React.FC = () => {
         component={AnalyticsScreen}
         options={{
           title: "Analytics",
-          headerTitle: "📊 Your Progress",
+          headerTitle: "Analytics",
         }}
       />
       <Tab.Screen
@@ -99,7 +106,7 @@ export const TabNavigator: React.FC = () => {
         component={SettingsScreen}
         options={{
           title: "Settings",
-          headerTitle: "⚙️ Settings",
+          headerTitle: "Settings",
         }}
       />
     </Tab.Navigator>

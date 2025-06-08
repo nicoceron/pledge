@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   RefreshControl,
   TouchableOpacity,
@@ -10,10 +9,10 @@ import {
   Modal,
   Alert,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useHabits } from "../hooks/useHabits";
 import { HabitCard } from "../components/HabitCard";
+import { generateId } from "../utils";
 import { Habit } from "../types";
 
 export const HabitsScreen: React.FC = () => {
@@ -29,48 +28,65 @@ export const HabitsScreen: React.FC = () => {
   } = useHabits();
 
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newHabit, setNewHabit] = useState({
+  const [newHabit, setNewHabit] = useState<
+    Omit<
+      Habit,
+      | "id"
+      | "createdAt"
+      | "streak"
+      | "completedDates"
+      | "missedDates"
+      | "totalPledged"
+      | "pendingReasonDates"
+      | "missReasons"
+    >
+  >({
     title: "",
     description: "",
-    frequency: "daily" as "daily" | "weekly" | "monthly",
+    frequency: "daily",
     pledgeAmount: 5,
+    isActive: true,
   });
 
   const activeHabits = getActiveHabits();
 
   const handleAddHabit = async () => {
     if (!newHabit.title.trim()) {
-      Alert.alert("Error", "Please enter a habit title");
+      Alert.alert("Please enter a habit name");
       return;
     }
 
-    try {
-      await addHabit({
-        title: newHabit.title.trim(),
-        description: newHabit.description.trim(),
-        frequency: newHabit.frequency,
-        pledgeAmount: newHabit.pledgeAmount,
-        isActive: true,
-      });
+    const habit: Habit = {
+      ...newHabit,
+      id: generateId(),
+      title: newHabit.title.trim(),
+      description: newHabit.description.trim(),
+      createdAt: new Date(),
+      streak: 0,
+      completedDates: [],
+      missedDates: [],
+      totalPledged: 0,
+      pendingReasonDates: [],
+      missReasons: {},
+    };
 
-      setNewHabit({
-        title: "",
-        description: "",
-        frequency: "daily",
-        pledgeAmount: 5,
-      });
-      setShowAddModal(false);
-    } catch (error) {
-      Alert.alert("Error", "Failed to add habit");
-    }
+    await addHabit(habit);
+    setNewHabit({
+      title: "",
+      description: "",
+      frequency: "daily",
+      pledgeAmount: 5,
+      isActive: true,
+    });
+    setShowAddModal(false);
   };
 
   const handleDeleteHabit = (habit: Habit) => {
     Alert.alert(
-      "Delete Habit",
-      `Are you sure you want to delete "${habit.title}"? This action cannot be undone.`,
+      `Delete "${habit.title}"? 💔`,
+      "This will permanently remove this habit and all its progress. This can't be undone.",
       [
-        { text: "Cancel", style: "cancel" },
+        { text: "Keep it", style: "cancel" },
         {
           text: "Delete",
           style: "destructive",
@@ -81,43 +97,48 @@ export const HabitsScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-navy-50">
       <ScrollView
-        style={styles.scrollView}
+        className="flex-1"
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={refresh} />
         }
         showsVerticalScrollIndicator={false}
       >
         {/* Summary */}
-        <View style={styles.summaryContainer}>
-          <Text style={styles.summaryText}>
-            You have {activeHabits.length} active habit
-            {activeHabits.length !== 1 ? "s" : ""}
+        <View className="bg-white border-b border-navy-100 px-6 py-4">
+          <Text className="text-navy-600 text-base text-center">
+            {activeHabits.length === 0
+              ? "Ready to start your habit journey? 🌟"
+              : `You have ${activeHabits.length} active habit${
+                  activeHabits.length === 1 ? "" : "s"
+                } 💪`}
           </Text>
         </View>
 
         {/* Habits List */}
         {activeHabits.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="leaf-outline" size={64} color="#9CA3AF" />
-            <Text style={styles.emptyStateTitle}>No habits yet</Text>
-            <Text style={styles.emptyStateText}>
-              Start building better habits by creating your first one!
+          <View className="bg-white mx-4 mt-6 rounded-2xl p-8 items-center border border-navy-100">
+            <Ionicons
+              name="sparkles"
+              size={64}
+              className="text-navy-600 mb-4"
+            />
+            <Text className="text-navy-900 text-xl font-bold mb-2 text-center">
+              Ready to build great habits? 🚀
+            </Text>
+            <Text className="text-navy-600 text-base text-center leading-6 mb-6">
+              Start your journey to a better you by creating your first habit
+              with gentle accountability!
             </Text>
             <TouchableOpacity
-              style={styles.addFirstHabitButton}
+              className="bg-navy-600 rounded-xl px-6 py-4 flex-row items-center shadow-sm"
               onPress={() => setShowAddModal(true)}
             >
-              <LinearGradient
-                colors={["#4F46E5", "#7C3AED"]}
-                style={styles.addFirstHabitGradient}
-              >
-                <Ionicons name="add" size={24} color="white" />
-                <Text style={styles.addFirstHabitText}>
-                  Create Your First Habit
-                </Text>
-              </LinearGradient>
+              <Ionicons name="add-circle" size={24} color="white" />
+              <Text className="text-white text-base font-semibold ml-2">
+                ✨ Create Your First Habit
+              </Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -132,21 +153,16 @@ export const HabitsScreen: React.FC = () => {
           ))
         )}
 
-        <View style={styles.bottomSpacing} />
+        <View className="h-20" />
       </ScrollView>
 
       {/* Floating Add Button */}
       {activeHabits.length > 0 && (
         <TouchableOpacity
-          style={styles.fab}
+          className="absolute bottom-6 right-6 bg-navy-600 w-14 h-14 rounded-full items-center justify-center shadow-lg"
           onPress={() => setShowAddModal(true)}
         >
-          <LinearGradient
-            colors={["#10B981", "#059669"]}
-            style={styles.fabGradient}
-          >
-            <Ionicons name="add" size={24} color="white" />
-          </LinearGradient>
+          <Ionicons name="add" size={28} color="white" />
         </TouchableOpacity>
       )}
 
@@ -156,100 +172,147 @@ export const HabitsScreen: React.FC = () => {
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity
-              onPress={() => setShowAddModal(false)}
-              style={styles.modalCloseButton}
-            >
-              <Ionicons name="close" size={24} color="#6B7280" />
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Create New Habit</Text>
-            <TouchableOpacity
-              onPress={handleAddHabit}
-              style={styles.modalSaveButton}
-            >
-              <Text style={styles.modalSaveText}>Save</Text>
-            </TouchableOpacity>
+        <View className="flex-1 bg-navy-50">
+          {/* Modal Header */}
+          <View className="bg-white border-b border-navy-100 px-6 py-4 pt-12">
+            <View className="flex-row justify-between items-center">
+              <TouchableOpacity onPress={() => setShowAddModal(false)}>
+                <Text className="text-navy-600 text-base font-medium">
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <Text className="text-navy-900 text-lg font-bold">
+                ✨ New Habit
+              </Text>
+              <TouchableOpacity onPress={handleAddHabit}>
+                <Text className="text-navy-600 text-base font-semibold">
+                  Save
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <ScrollView style={styles.modalContent}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Habit Name</Text>
+          <ScrollView className="flex-1 p-6">
+            {/* Habit Name */}
+            <View className="mb-6">
+              <Text className="text-navy-900 text-base font-semibold mb-2">
+                Habit Name *
+              </Text>
               <TextInput
-                style={styles.textInput}
+                className="bg-white border border-navy-200 rounded-xl px-4 py-3 text-navy-900 text-base"
+                placeholder="e.g., Morning meditation, Daily walk..."
+                placeholderTextColor="#9fb3c8"
                 value={newHabit.title}
                 onChangeText={(text) =>
                   setNewHabit({ ...newHabit, title: text })
                 }
-                placeholder="e.g., Exercise for 30 minutes"
-                placeholderTextColor="#9CA3AF"
               />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Description (Optional)</Text>
+            {/* Description */}
+            <View className="mb-6">
+              <Text className="text-navy-900 text-base font-semibold mb-2">
+                Description (Optional)
+              </Text>
               <TextInput
-                style={[styles.textInput, styles.textArea]}
+                className="bg-white border border-navy-200 rounded-xl px-4 py-3 text-navy-900 text-base"
+                placeholder="Why is this habit important to you?"
+                placeholderTextColor="#9fb3c8"
                 value={newHabit.description}
                 onChangeText={(text) =>
                   setNewHabit({ ...newHabit, description: text })
                 }
-                placeholder="Add more details about your habit"
-                placeholderTextColor="#9CA3AF"
                 multiline
                 numberOfLines={3}
+                textAlignVertical="top"
               />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Frequency</Text>
-              <View style={styles.frequencyContainer}>
-                {(["daily", "weekly", "monthly"] as const).map((freq) => (
+            {/* Frequency */}
+            <View className="mb-6">
+              <Text className="text-navy-900 text-base font-semibold mb-3">
+                Frequency
+              </Text>
+              <View className="flex-row gap-3">
+                {["daily", "weekly", "monthly"].map((freq) => (
                   <TouchableOpacity
                     key={freq}
-                    style={[
-                      styles.frequencyButton,
-                      newHabit.frequency === freq &&
-                        styles.frequencyButtonActive,
-                    ]}
+                    className={`flex-1 py-3 px-4 rounded-xl border-2 ${
+                      newHabit.frequency === freq
+                        ? "bg-navy-600 border-navy-600"
+                        : "bg-white border-navy-200"
+                    }`}
                     onPress={() =>
-                      setNewHabit({ ...newHabit, frequency: freq })
+                      setNewHabit({ ...newHabit, frequency: freq as any })
                     }
                   >
                     <Text
-                      style={[
-                        styles.frequencyButtonText,
-                        newHabit.frequency === freq &&
-                          styles.frequencyButtonTextActive,
-                      ]}
+                      className={`text-center font-semibold capitalize ${
+                        newHabit.frequency === freq
+                          ? "text-white"
+                          : "text-navy-700"
+                      }`}
                     >
-                      {freq.charAt(0).toUpperCase() + freq.slice(1)}
+                      {freq}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Pledge Amount</Text>
-              <TextInput
-                style={styles.textInput}
-                value={newHabit.pledgeAmount.toString()}
-                onChangeText={(text) => {
-                  const amount = parseFloat(text) || 0;
-                  setNewHabit({
-                    ...newHabit,
-                    pledgeAmount: Math.max(0, amount),
-                  });
-                }}
-                placeholder="5.00"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="numeric"
-              />
-              <Text style={styles.inputHelp}>
-                Amount you'll be charged for missing this habit
+            {/* Pledge Amount */}
+            <View className="mb-6">
+              <Text className="text-navy-900 text-base font-semibold mb-2">
+                Pledge Amount
               </Text>
+              <Text className="text-navy-600 text-sm mb-3">
+                Amount charged when you miss this habit
+              </Text>
+              <View className="flex-row gap-3">
+                {[1, 5, 10, 25].map((amount) => (
+                  <TouchableOpacity
+                    key={amount}
+                    className={`flex-1 py-3 px-4 rounded-xl border-2 ${
+                      newHabit.pledgeAmount === amount
+                        ? "bg-navy-600 border-navy-600"
+                        : "bg-white border-navy-200"
+                    }`}
+                    onPress={() =>
+                      setNewHabit({ ...newHabit, pledgeAmount: amount })
+                    }
+                  >
+                    <Text
+                      className={`text-center font-semibold ${
+                        newHabit.pledgeAmount === amount
+                          ? "text-white"
+                          : "text-navy-700"
+                      }`}
+                    >
+                      ${amount}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Info Card */}
+            <View className="bg-pastel-info border border-blue-200 rounded-xl p-4">
+              <View className="flex-row items-start">
+                <Ionicons
+                  name="information-circle"
+                  size={20}
+                  className="text-blue-600 mr-3 mt-0.5"
+                />
+                <View className="flex-1">
+                  <Text className="text-blue-800 text-sm font-semibold mb-1">
+                    💙 Gentle Accountability
+                  </Text>
+                  <Text className="text-blue-700 text-sm leading-5">
+                    We believe in understanding, not punishment. When you miss a
+                    habit, we'll ask why to help you grow stronger together.
+                  </Text>
+                </View>
+              </View>
             </View>
           </ScrollView>
         </View>
@@ -257,173 +320,3 @@ export const HabitsScreen: React.FC = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F9FAFB",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  summaryContainer: {
-    padding: 20,
-    backgroundColor: "white",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  summaryText: {
-    fontSize: 16,
-    color: "#6B7280",
-    textAlign: "center",
-  },
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: 60,
-    paddingHorizontal: 20,
-  },
-  emptyStateTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyStateText: {
-    fontSize: 14,
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 20,
-    marginBottom: 24,
-  },
-  addFirstHabitButton: {
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  addFirstHabitGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    gap: 8,
-  },
-  addFirstHabitText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  bottomSpacing: {
-    height: 100,
-  },
-  fab: {
-    position: "absolute",
-    bottom: 24,
-    right: 24,
-    borderRadius: 28,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  fabGradient: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "white",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  modalCloseButton: {
-    padding: 4,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1F2937",
-  },
-  modalSaveButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: "#4F46E5",
-    borderRadius: 8,
-  },
-  modalSaveText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  modalContent: {
-    flex: 1,
-    padding: 20,
-  },
-  inputGroup: {
-    marginBottom: 24,
-  },
-  inputLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginBottom: 8,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: "#1F2937",
-    backgroundColor: "white",
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: "top",
-  },
-  inputHelp: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginTop: 4,
-  },
-  frequencyContainer: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  frequencyButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
-    alignItems: "center",
-    backgroundColor: "white",
-  },
-  frequencyButtonActive: {
-    backgroundColor: "#4F46E5",
-    borderColor: "#4F46E5",
-  },
-  frequencyButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#6B7280",
-  },
-  frequencyButtonTextActive: {
-    color: "white",
-  },
-});

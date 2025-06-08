@@ -1,6 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { View, Text, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Habit, MissReason } from "../types";
 import {
@@ -9,7 +8,6 @@ import {
   isHabitDueToday,
   getMissReasonLabel,
 } from "../utils";
-import { theme } from "../utils/theme";
 
 interface HabitCardProps {
   habit: Habit;
@@ -43,37 +41,37 @@ export const HabitCard: React.FC<HabitCardProps> = ({
     if (isMissedToday || isPendingReasonToday) return;
 
     Alert.alert(
-      `You missed "${habit.title}" 💙`,
-      `That's okay, we all have tough days! Help us understand what happened so we can better support you. A gentle reminder: your ${formatCurrency(
+      `You missed "${habit.title}"`,
+      `That's okay, we all have tough days. Help us understand what happened so we can better support you. Your ${formatCurrency(
         habit.pledgeAmount
       )} pledge will be processed after you select a reason.`,
       [
         {
-          text: "😰 Stressed/Overwhelmed",
+          text: "Stressed/Overwhelmed",
           onPress: () => onMiss(habit.id, "stressed"),
         },
         {
-          text: "📱 Got Distracted",
+          text: "Got Distracted",
           onPress: () => onMiss(habit.id, "distracted"),
         },
         {
-          text: "⏰ Ran Out of Time",
+          text: "Ran Out of Time",
           onPress: () => onMiss(habit.id, "no_time"),
         },
         {
-          text: "🤒 Not Feeling Well",
+          text: "Not Feeling Well",
           onPress: () => onMiss(habit.id, "sick"),
         },
         {
-          text: "🚨 Emergency Situation",
+          text: "Emergency Situation",
           onPress: () => onMiss(habit.id, "emergency"),
         },
         {
-          text: "💭 Something Else",
+          text: "Something Else",
           onPress: () => {
             Alert.prompt(
               "What happened?",
-              "Share what made this challenging today - no judgment here:",
+              "Share what made this challenging today:",
               (text) => {
                 if (text && text.trim()) {
                   onMiss(habit.id, "other", text.trim());
@@ -83,7 +81,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
           },
         },
         {
-          text: "⏸️ I'll explain later",
+          text: "I'll explain later",
           style: "cancel",
           onPress: () => onMiss(habit.id), // No reason provided
         },
@@ -91,91 +89,76 @@ export const HabitCard: React.FC<HabitCardProps> = ({
     );
   };
 
-  const getStatusColor = () => {
-    if (isCompletedToday) return theme.colors.status.success;
-    if (isMissedToday) return theme.colors.status.error;
-    if (isPendingReasonToday) return theme.colors.status.warning;
-    if (isDueToday) return theme.colors.primary.light;
-    return theme.colors.text.light;
-  };
-
-  const getStatusBgColor = () => {
-    if (isCompletedToday) return theme.colors.pastel.green;
-    if (isMissedToday) return theme.colors.pastel.pink;
-    if (isPendingReasonToday) return theme.colors.pastel.yellow;
-    if (isDueToday) return theme.colors.pastel.blue;
-    return theme.colors.pastel.gray;
-  };
-
-  const getStatusIcon = () => {
-    if (isCompletedToday) return "checkmark-circle";
-    if (isMissedToday) return "heart-dislike";
-    if (isPendingReasonToday) return "chatbubble-ellipses";
-    if (isDueToday) return "time";
-    return "ellipse-outline";
-  };
-
-  const getStatusText = () => {
-    if (isCompletedToday) return "✨ Completed!";
+  const getStatusInfo = () => {
+    if (isCompletedToday)
+      return {
+        color: "#059669",
+        bgColor: "#f0fdf4",
+        icon: "checkmark-circle" as const,
+        message: "Completed",
+      };
     if (isMissedToday) {
       const missReason = habit.missReasons[today];
-      return missReason
-        ? `Missed: ${getMissReasonLabel(missReason.reason)}`
-        : "Missed";
+      return {
+        color: "#dc2626",
+        bgColor: "#fef2f2",
+        icon: "close-circle" as const,
+        message: missReason
+          ? `Missed: ${getMissReasonLabel(missReason.reason)}`
+          : "Missed",
+      };
     }
-    if (isPendingReasonToday) return "💭 Tell us what happened";
-    if (isDueToday) return "⏰ Ready to go!";
-    return "Not due today";
+    if (isPendingReasonToday)
+      return {
+        color: "#ea580c",
+        bgColor: "#fff7ed",
+        icon: "time" as const,
+        message: "Needs attention",
+      };
+    if (isDueToday)
+      return {
+        color: "#2563eb",
+        bgColor: "#eff6ff",
+        icon: "radio-button-on" as const,
+        message: "Ready",
+      };
+    return {
+      color: "#6b7280",
+      bgColor: "#f9fafb",
+      icon: "ellipse-outline" as const,
+      message: "Not due today",
+    };
   };
 
+  const statusInfo = getStatusInfo();
   const hasPendingReasons = habit.pendingReasonDates.length > 0;
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      className="mx-2 mb-4"
       onPress={() => onPress?.(habit)}
       activeOpacity={0.7}
     >
-      <LinearGradient
-        colors={[
-          theme.colors.background.card,
-          theme.colors.background.secondary,
-        ]}
-        style={[styles.gradient, { borderColor: theme.colors.border.light }]}
-      >
+      <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
         {hasPendingReasons && (
-          <View
-            style={[
-              styles.pendingBanner,
-              { backgroundColor: theme.colors.pastel.yellow },
-            ]}
-          >
-            <Ionicons
-              name="chatbubble-ellipses"
-              size={16}
-              color={theme.colors.status.warning}
-            />
-            <Text
-              style={[
-                styles.pendingText,
-                { color: theme.colors.status.warning },
-              ]}
-            >
-              💭 {habit.pendingReasonDates.length} day
+          <View className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-4 flex-row items-center">
+            <View className="bg-orange-500 rounded-full p-1 mr-3">
+              <Ionicons name="chatbubble-ellipses" size={16} color="white" />
+            </View>
+            <Text className="text-orange-700 text-base font-medium flex-1">
+              {habit.pendingReasonDates.length} day
               {habit.pendingReasonDates.length > 1 ? "s" : ""} need your
-              thoughts
+              attention
             </Text>
           </View>
         )}
 
-        <View style={styles.header}>
-          <View style={styles.titleContainer}>
-            <Text style={[styles.title, { color: theme.colors.text.primary }]}>
+        <View className="flex-row justify-between items-start mb-4">
+          <View className="flex-1 mr-4">
+            <Text className="text-gray-900 text-xl font-bold mb-2">
               {habit.title}
             </Text>
-            <Text
-              style={[styles.frequency, { color: theme.colors.text.secondary }]}
-            >
+            <Text className="text-gray-600 text-base capitalize">
               {habit.frequency === "custom" &&
               habit.customFrequency?.timesPerWeek
                 ? `${habit.customFrequency.timesPerWeek}x per week`
@@ -183,271 +166,83 @@ export const HabitCard: React.FC<HabitCardProps> = ({
             </Text>
           </View>
           <View
-            style={[
-              styles.statusBadge,
-              {
-                backgroundColor: getStatusBgColor(),
-                borderColor: getStatusColor(),
-                borderWidth: 1,
-              },
-            ]}
+            className="rounded-full p-3 items-center justify-center"
+            style={{ backgroundColor: statusInfo.bgColor }}
           >
             <Ionicons
-              name={getStatusIcon()}
-              size={14}
-              color={getStatusColor()}
+              name={statusInfo.icon}
+              size={24}
+              color={statusInfo.color}
             />
           </View>
         </View>
 
         {habit.description && (
-          <Text
-            style={[styles.description, { color: theme.colors.text.secondary }]}
-          >
+          <Text className="text-gray-600 text-base mb-4 leading-6">
             {habit.description}
           </Text>
         )}
 
-        <View style={styles.statsContainer}>
-          <View
-            style={[styles.stat, { backgroundColor: theme.colors.pastel.blue }]}
-          >
-            <Text
-              style={[styles.statLabel, { color: theme.colors.text.secondary }]}
-            >
-              Streak
+        <View className="flex-row justify-between mb-6 gap-4">
+          <View className="bg-gray-50 rounded-xl p-4 items-center flex-1">
+            <Text className="text-gray-500 text-sm font-medium mb-1">
+              Current Streak
             </Text>
-            <Text
-              style={[styles.statValue, { color: theme.colors.primary.main }]}
-            >
-              🔥 {habit.streak}
+            <Text className="text-gray-900 text-2xl font-bold">
+              {habit.streak}
             </Text>
           </View>
-          <View
-            style={[
-              styles.stat,
-              { backgroundColor: theme.colors.pastel.purple },
-            ]}
-          >
-            <Text
-              style={[styles.statLabel, { color: theme.colors.text.secondary }]}
-            >
-              Pledge
+          <View className="bg-gray-50 rounded-xl p-4 items-center flex-1">
+            <Text className="text-gray-500 text-sm font-medium mb-1">
+              Pledge Amount
             </Text>
-            <Text
-              style={[styles.statValue, { color: theme.colors.primary.main }]}
-            >
-              💰 {formatCurrency(habit.pledgeAmount)}
-            </Text>
-          </View>
-          <View
-            style={[styles.stat, { backgroundColor: theme.colors.pastel.pink }]}
-          >
-            <Text
-              style={[styles.statLabel, { color: theme.colors.text.secondary }]}
-            >
-              Charged
-            </Text>
-            <Text
-              style={[styles.statValue, { color: theme.colors.status.error }]}
-            >
-              💸 {formatCurrency(habit.totalPledged)}
+            <Text className="text-gray-900 text-2xl font-bold">
+              {formatCurrency(habit.pledgeAmount)}
             </Text>
           </View>
         </View>
 
-        <View style={styles.statusContainer}>
-          <View
-            style={[styles.statusChip, { backgroundColor: getStatusBgColor() }]}
+        <View
+          className="rounded-xl p-3 mb-4 flex-row items-center"
+          style={{ backgroundColor: statusInfo.bgColor }}
+        >
+          <Ionicons
+            name={statusInfo.icon}
+            size={18}
+            color={statusInfo.color}
+            style={{ marginRight: 8 }}
+          />
+          <Text
+            className="text-base font-medium"
+            style={{ color: statusInfo.color }}
           >
-            <Text style={[styles.statusText, { color: getStatusColor() }]}>
-              {getStatusText()}
-            </Text>
-          </View>
+            {statusInfo.message}
+          </Text>
         </View>
 
-        {isDueToday &&
-          !isCompletedToday &&
-          !isMissedToday &&
-          !isPendingReasonToday && (
-            <View style={styles.actionContainer}>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.completeButton]}
-                onPress={handleComplete}
-              >
-                <Ionicons name="checkmark-circle" size={18} color="white" />
-                <Text style={styles.actionButtonText}>✨ Complete</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.actionButton, styles.missButton]}
-                onPress={handleMiss}
-              >
-                <Ionicons name="chatbubble-ellipses" size={18} color="white" />
-                <Text style={styles.actionButtonText}>💭 Can't do it</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-        {isPendingReasonToday && (
-          <View style={styles.pendingActionContainer}>
+        {isDueToday && !isCompletedToday && !isMissedToday && (
+          <View className="flex-row gap-3">
             <TouchableOpacity
-              style={[styles.actionButton, styles.pendingButton]}
+              className="flex-1 bg-green-600 rounded-xl py-4 px-6 flex-row items-center justify-center"
+              onPress={handleComplete}
+            >
+              <Ionicons name="checkmark" size={20} color="white" />
+              <Text className="text-white text-lg font-semibold ml-2">
+                Complete
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-1 bg-gray-200 rounded-xl py-4 px-6 flex-row items-center justify-center"
               onPress={handleMiss}
             >
-              <Ionicons name="chatbubble-ellipses" size={18} color="white" />
-              <Text style={styles.actionButtonText}>
-                💭 Tell us what happened
+              <Ionicons name="close" size={20} color="#6b7280" />
+              <Text className="text-gray-600 text-lg font-semibold ml-2">
+                Miss
               </Text>
             </TouchableOpacity>
           </View>
         )}
-      </LinearGradient>
+      </View>
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    marginHorizontal: theme.spacing.md,
-    marginVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.lg,
-    shadowColor: theme.colors.shadow.color,
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: theme.colors.shadow.opacity,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  gradient: {
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-  },
-  pendingBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: theme.spacing.sm + 2,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    marginBottom: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  pendingText: {
-    fontSize: theme.typography.size.sm,
-    fontWeight: theme.typography.weight.semibold as any,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: theme.spacing.sm,
-  },
-  titleContainer: {
-    flex: 1,
-  },
-  title: {
-    fontSize: theme.typography.size.xl,
-    fontWeight: theme.typography.weight.bold as any,
-    marginBottom: theme.spacing.xs,
-  },
-  frequency: {
-    fontSize: theme.typography.size.md,
-    textTransform: "capitalize",
-  },
-  statusBadge: {
-    paddingHorizontal: theme.spacing.sm + 2,
-    paddingVertical: theme.spacing.xs + 2,
-    borderRadius: theme.borderRadius.md,
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 32,
-    height: 32,
-  },
-  description: {
-    fontSize: theme.typography.size.md,
-    marginBottom: theme.spacing.md,
-    lineHeight: 22,
-    fontStyle: "italic",
-  },
-  statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  stat: {
-    alignItems: "center",
-    flex: 1,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.sm,
-    borderRadius: theme.borderRadius.md,
-  },
-  statLabel: {
-    fontSize: theme.typography.size.xs,
-    marginBottom: theme.spacing.xs,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    fontWeight: theme.typography.weight.medium as any,
-  },
-  statValue: {
-    fontSize: theme.typography.size.lg,
-    fontWeight: theme.typography.weight.bold as any,
-  },
-  statusContainer: {
-    alignItems: "center",
-    marginBottom: theme.spacing.md,
-  },
-  statusChip: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.xl,
-  },
-  statusText: {
-    fontSize: theme.typography.size.md,
-    fontWeight: theme.typography.weight.semibold as any,
-    textAlign: "center",
-  },
-  actionContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: theme.spacing.md,
-  },
-  pendingActionContainer: {
-    alignItems: "center",
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    gap: theme.spacing.sm,
-    shadowColor: theme.colors.shadow.color,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  completeButton: {
-    backgroundColor: theme.colors.status.success,
-  },
-  missButton: {
-    backgroundColor: theme.colors.primary.main,
-  },
-  pendingButton: {
-    backgroundColor: theme.colors.status.warning,
-    minWidth: 220,
-  },
-  actionButtonText: {
-    color: theme.colors.text.inverse,
-    fontSize: theme.typography.size.md,
-    fontWeight: theme.typography.weight.semibold as any,
-  },
-});
