@@ -1,9 +1,10 @@
 visuals:
-    - use more pastel colors @started(25-06-08 14:42)
+    - use more pastel colors
     - use more rounded corners
     - add a graphical view of the habits
     - add an anki like widget to review the habits
     - create an icon for the app
+    - when I scroll the calendar the one in the middle should be highlighted and selected
 
 AI:
     - Based on the user response on missing task generate recommendations

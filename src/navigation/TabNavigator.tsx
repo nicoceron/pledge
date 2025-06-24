@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { TabParamList } from "../types";
 
-// Import screens (we'll create these next)
+// Import screens
 import { HomeScreen } from "../screens/HomeScreen";
 import { HabitsScreen } from "../screens/HabitsScreen";
 import { AnalyticsScreen } from "../screens/AnalyticsScreen";
@@ -33,48 +33,24 @@ export const TabNavigator: React.FC = () => {
               break;
           }
 
-          return <Ionicons name={iconName} size={24} color={color} />;
+          return <Ionicons name={iconName} size={20} color={color} />;
         },
-        tabBarActiveTintColor: "#1f2937",
-        tabBarInactiveTintColor: "#6b7280",
+        tabBarActiveTintColor: "#000000",
+        tabBarInactiveTintColor: "#9ca3af",
         tabBarStyle: {
           backgroundColor: "#ffffff",
-          borderTopColor: "#e5e7eb",
+          borderTopColor: "#f3f4f6",
           borderTopWidth: 1,
           paddingBottom: 8,
           paddingTop: 8,
           height: 80,
-          shadowColor: "#000",
-          shadowOffset: {
-            width: 0,
-            height: -1,
-          },
-          shadowOpacity: 0.05,
-          shadowRadius: 4,
-          elevation: 4,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: "500",
           marginTop: 4,
         },
-        headerStyle: {
-          backgroundColor: "#ffffff",
-          shadowColor: "#000",
-          shadowOffset: {
-            width: 0,
-            height: 1,
-          },
-          shadowOpacity: 0.05,
-          shadowRadius: 2,
-          elevation: 2,
-        },
-        headerTintColor: "#1f2937",
-        headerTitleStyle: {
-          fontWeight: "600",
-          fontSize: 20,
-          color: "#1f2937",
-        },
+        headerShown: false,
       })}
     >
       <Tab.Screen
@@ -82,7 +58,6 @@ export const TabNavigator: React.FC = () => {
         component={HomeScreen}
         options={{
           title: "Today",
-          headerTitle: "Today",
         }}
       />
       <Tab.Screen
@@ -90,7 +65,6 @@ export const TabNavigator: React.FC = () => {
         component={HabitsScreen}
         options={{
           title: "Habits",
-          headerTitle: "Habits",
         }}
       />
       <Tab.Screen
@@ -98,7 +72,6 @@ export const TabNavigator: React.FC = () => {
         component={AnalyticsScreen}
         options={{
           title: "Analytics",
-          headerTitle: "Analytics",
         }}
       />
       <Tab.Screen
@@ -106,7 +79,6 @@ export const TabNavigator: React.FC = () => {
         component={SettingsScreen}
         options={{
           title: "Settings",
-          headerTitle: "Settings",
         }}
       />
     </Tab.Navigator>

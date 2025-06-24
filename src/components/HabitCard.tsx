@@ -96,6 +96,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
         bgColor: "#f0fdf4",
         icon: "checkmark-circle" as const,
         message: "Completed",
+        showStatus: true,
       };
     if (isMissedToday) {
       const missReason = habit.missReasons[today];
@@ -106,6 +107,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
         message: missReason
           ? `Missed: ${getMissReasonLabel(missReason.reason)}`
           : "Missed",
+        showStatus: true,
       };
     }
     if (isPendingReasonToday)
@@ -114,19 +116,22 @@ export const HabitCard: React.FC<HabitCardProps> = ({
         bgColor: "#fff7ed",
         icon: "time" as const,
         message: "Needs attention",
+        showStatus: true,
       };
     if (isDueToday)
       return {
-        color: "#2563eb",
-        bgColor: "#eff6ff",
-        icon: "radio-button-on" as const,
-        message: "Ready",
+        color: "#6b7280",
+        bgColor: "#f9fafb",
+        icon: "ellipse-outline" as const,
+        message: "",
+        showStatus: false,
       };
     return {
       color: "#6b7280",
       bgColor: "#f9fafb",
       icon: "ellipse-outline" as const,
       message: "Not due today",
+      showStatus: true,
     };
   };
 
@@ -202,23 +207,25 @@ export const HabitCard: React.FC<HabitCardProps> = ({
           </View>
         </View>
 
-        <View
-          className="rounded-xl p-3 mb-4 flex-row items-center"
-          style={{ backgroundColor: statusInfo.bgColor }}
-        >
-          <Ionicons
-            name={statusInfo.icon}
-            size={18}
-            color={statusInfo.color}
-            style={{ marginRight: 8 }}
-          />
-          <Text
-            className="text-base font-medium"
-            style={{ color: statusInfo.color }}
+        {statusInfo.showStatus && (
+          <View
+            className="rounded-xl p-3 mb-4 flex-row items-center"
+            style={{ backgroundColor: statusInfo.bgColor }}
           >
-            {statusInfo.message}
-          </Text>
-        </View>
+            <Ionicons
+              name={statusInfo.icon}
+              size={18}
+              color={statusInfo.color}
+              style={{ marginRight: 8 }}
+            />
+            <Text
+              className="text-base font-medium"
+              style={{ color: statusInfo.color }}
+            >
+              {statusInfo.message}
+            </Text>
+          </View>
+        )}
 
         {isDueToday && !isCompletedToday && !isMissedToday && (
           <View className="flex-row gap-3">
