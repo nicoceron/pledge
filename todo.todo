@@ -1,7 +1,6 @@
 visuals:
     - use more pastel colors
     - use more rounded corners
-    - add a graphical view of the habits
     - add an anki like widget to review the habits
     - create an icon for the app
     - when I scroll the calendar the one in the middle should be highlighted and selected
@@ -13,4 +12,8 @@ payments:
     - add a payment system
     - create restricions on how much to pay
     - add a date to stop payments/ maybe monthly
+logging:
+    - add a logging system to the app
+calendar:
+    - show an anki calendar for each habit
     

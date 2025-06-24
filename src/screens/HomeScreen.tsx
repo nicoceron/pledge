@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -11,30 +11,17 @@ import { useNavigation, useNavigationState } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useHabits } from "../hooks/useHabits";
 import { RootStackParamList } from "../types";
+import Calendar from "../components/Calendar";
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 const today = new Date();
 today.setHours(0, 0, 0, 0);
 
-const monthNames = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
 export const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const navigationState = useNavigationState((state) => state);
+  const [selectedDate, setSelectedDate] = useState<Date>(today);
   const { habits, pendingReasons, completeHabit, getActiveHabits } =
     useHabits();
 
@@ -77,35 +64,30 @@ export const HomeScreen: React.FC = () => {
     });
   };
 
-  const selectedDate = today;
   const selectedDateHabits = getHabitsForDate(selectedDate);
 
-  const formatDate = () => {
-    return `${
-      monthNames[selectedDate.getMonth()]
-    } ${selectedDate.getDate()}, ${selectedDate.getFullYear()}`;
-  };
+  const isSelectedDateToday =
+    selectedDate.toDateString() === today.toDateString();
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <ScrollView className="flex-1 px-6 pt-12">
-        {/* Date Header */}
-        <View className="items-center mb-8">
-          <Text className="text-xl font-bold text-gray-900 mb-2">
-            {formatDate()}
-          </Text>
-        </View>
+      <ScrollView className="flex-1 pt-12">
+        {/* Calendar */}
+        <Calendar date={selectedDate} onChange={setSelectedDate} />
 
         {/* Focus Message */}
-        <View className="mb-12">
+        <View className="mb-12 px-6">
           <Text className="text-center text-gray-600 text-base leading-relaxed">
-            Focus on the 3 most important habits to accomplish today.
+            Focus on the 3 most important habits to accomplish{"\n"}
+            {isSelectedDateToday ? "today" : "this day"}.
           </Text>
         </View>
 
         {/* Today Section */}
-        <View className="mb-12">
-          <Text className="text-3xl font-bold text-gray-900 mb-8">Today</Text>
+        <View className="mb-12 px-6">
+          <Text className="text-3xl font-bold text-gray-900 mb-8">
+            {isSelectedDateToday ? "Today" : "Habits"}
+          </Text>
 
           {/* Habits List - Show only existing habits, limit to 3 */}
           <View className="space-y-6">
@@ -136,7 +118,7 @@ export const HomeScreen: React.FC = () => {
                     key={habit.id}
                     className="flex-row items-center py-4"
                     onPress={() => {
-                      if (!isCompleted && !isMissed) {
+                      if (isSelectedDateToday && !isCompleted && !isMissed) {
                         completeHabit(habit.id);
                       }
                     }}
@@ -200,7 +182,7 @@ export const HomeScreen: React.FC = () => {
 
         {/* Bottom Message - Only show if there are more than 3 habits */}
         {selectedDateHabits.length > 3 && (
-          <View className="items-center pb-12">
+          <View className="items-center pb-12 px-6">
             <View className="w-16 h-px bg-gray-300 mb-6" />
             <Text className="text-center text-gray-500 text-sm leading-relaxed max-w-xs">
               Every other habit stays in your list. Tackle your top 3 habits
