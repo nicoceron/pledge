@@ -1,20 +1,15 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useNavigationState } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHabits } from "../hooks/useHabits";
 import { RootStackParamList } from "../types";
 import Calendar from "../components/Calendar";
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
-
+// Set today to 00:00:00
 const today = new Date();
 today.setHours(0, 0, 0, 0);
 
@@ -24,6 +19,7 @@ export const HomeScreen: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(today);
   const { habits, pendingReasons, completeHabit, getActiveHabits } =
     useHabits();
+  const insets = useSafeAreaInsets();
 
   // Check for pending reasons on component mount
   useEffect(() => {
@@ -70,8 +66,8 @@ export const HomeScreen: React.FC = () => {
     selectedDate.toDateString() === today.toDateString();
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <ScrollView className="flex-1 pt-12">
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
+      <ScrollView className="flex-1">
         {/* Calendar */}
         <Calendar date={selectedDate} onChange={setSelectedDate} />
 
@@ -191,6 +187,6 @@ export const HomeScreen: React.FC = () => {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };

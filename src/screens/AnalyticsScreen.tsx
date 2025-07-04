@@ -5,9 +5,11 @@ import { useHabits } from "../hooks/useHabits";
 import { StorageService } from "../services/storage";
 import { Payment } from "../types";
 import { formatCurrency, formatDate } from "../utils";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export const AnalyticsScreen: React.FC = () => {
-  const { habits, loading, getTotalPledgedAmount, refresh } = useHabits();
+  const insets = useSafeAreaInsets();
+  const { habits, loading, getTotalPledged, refresh } = useHabits();
   const [payments, setPayments] = useState<Payment[]>([]);
 
   const loadPayments = async () => {
@@ -29,7 +31,7 @@ export const AnalyticsScreen: React.FC = () => {
   const totalStreak = habits.reduce((sum, habit) => sum + habit.streak, 0);
   const averageStreak =
     totalHabits > 0 ? Math.round(totalStreak / totalHabits) : 0;
-  const totalPledged = getTotalPledgedAmount();
+  const totalPledged = getTotalPledged();
   const completedHabits = habits.reduce(
     (sum, habit) => sum + habit.completedDates.length,
     0
@@ -58,22 +60,36 @@ export const AnalyticsScreen: React.FC = () => {
     iconColor: string;
     subtitle?: string;
   }) => (
-    <View className="bg-white rounded-2xl p-4 items-center border border-navy-100 flex-1">
+    <View className="bg-white rounded-2xl p-4 items-center border border-gray-200 flex-1">
       <View
         className={`w-12 h-12 rounded-full ${bgColor} items-center justify-center mb-3`}
       >
-        <Ionicons name={icon} size={24} className={iconColor} />
+        <Ionicons
+          name={icon}
+          size={24}
+          color={
+            iconColor === "text-green-600"
+              ? "#059669"
+              : iconColor === "text-orange-600"
+              ? "#ea580c"
+              : iconColor === "text-blue-600"
+              ? "#2563eb"
+              : iconColor === "text-red-600"
+              ? "#dc2626"
+              : "#6b7280"
+          }
+        />
       </View>
-      <Text className="text-navy-600 text-sm font-medium mb-1">{title}</Text>
-      <Text className="text-navy-900 text-2xl font-bold">{value}</Text>
+      <Text className="text-gray-600 text-sm font-medium mb-1">{title}</Text>
+      <Text className="text-gray-900 text-2xl font-bold">{value}</Text>
       {subtitle && (
-        <Text className="text-navy-500 text-xs mt-1">{subtitle}</Text>
+        <Text className="text-gray-500 text-xs mt-1">{subtitle}</Text>
       )}
     </View>
   );
 
   return (
-    <View className="flex-1 bg-navy-50">
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
       <ScrollView
         className="flex-1"
         refreshControl={
@@ -82,17 +98,17 @@ export const AnalyticsScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View className="bg-navy-800 pt-12 pb-6 px-6">
-          <Text className="text-white text-2xl font-bold mb-1">
+        <View className="pt-12 pb-6 px-6">
+          <Text className="text-gray-900 text-3xl font-bold mb-2">
             Your Progress
           </Text>
-          <Text className="text-navy-200 text-base">
+          <Text className="text-gray-600 text-base">
             Track your habit journey
           </Text>
         </View>
 
         {/* Key Metrics */}
-        <View className="px-4 mt-4">
+        <View className="px-6 mt-4">
           <View className="flex-row gap-3 mb-3">
             <StatCard
               icon="trophy"
@@ -133,36 +149,36 @@ export const AnalyticsScreen: React.FC = () => {
         </View>
 
         {/* Detailed Stats */}
-        <View className="px-4 mt-6">
-          <Text className="text-navy-900 text-xl font-bold mb-4">
+        <View className="px-6 mt-8">
+          <Text className="text-gray-900 text-xl font-bold mb-4">
             Detailed Statistics
           </Text>
 
-          <View className="bg-white rounded-2xl p-4 border border-navy-100">
-            <View className="flex-row justify-between items-center py-3 border-b border-navy-100">
-              <Text className="text-navy-600 text-base">Habits Completed</Text>
-              <Text className="text-navy-900 text-lg font-semibold">
+          <View className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+            <View className="flex-row justify-between items-center py-3 border-b border-gray-200">
+              <Text className="text-gray-600 text-base">Habits Completed</Text>
+              <Text className="text-gray-900 text-lg font-semibold">
                 {completedHabits}
               </Text>
             </View>
 
-            <View className="flex-row justify-between items-center py-3 border-b border-navy-100">
-              <Text className="text-navy-600 text-base">Habits Missed</Text>
+            <View className="flex-row justify-between items-center py-3 border-b border-gray-200">
+              <Text className="text-gray-600 text-base">Habits Missed</Text>
               <Text className="text-red-600 text-lg font-semibold">
                 {missedHabits}
               </Text>
             </View>
 
-            <View className="flex-row justify-between items-center py-3 border-b border-navy-100">
-              <Text className="text-navy-600 text-base">Total Streak Days</Text>
-              <Text className="text-navy-900 text-lg font-semibold">
+            <View className="flex-row justify-between items-center py-3 border-b border-gray-200">
+              <Text className="text-gray-600 text-base">Total Streak Days</Text>
+              <Text className="text-gray-900 text-lg font-semibold">
                 {totalStreak}
               </Text>
             </View>
 
             <View className="flex-row justify-between items-center py-3">
-              <Text className="text-navy-600 text-base">Average Pledge</Text>
-              <Text className="text-navy-900 text-lg font-semibold">
+              <Text className="text-gray-600 text-base">Average Pledge</Text>
+              <Text className="text-gray-900 text-lg font-semibold">
                 {totalHabits > 0
                   ? formatCurrency(
                       habits.reduce((sum, h) => sum + h.pledgeAmount, 0) /
@@ -175,81 +191,71 @@ export const AnalyticsScreen: React.FC = () => {
         </View>
 
         {/* Recent Payments */}
-        <View className="px-4 mt-6">
-          <Text className="text-navy-900 text-xl font-bold mb-4">
+        <View className="px-6 mt-8">
+          <Text className="text-gray-900 text-xl font-bold mb-4">
             Recent Charges
           </Text>
 
           {payments.length === 0 ? (
-            <View className="bg-white rounded-2xl p-8 items-center border border-navy-100">
+            <View className="bg-gray-50 rounded-2xl p-8 items-center border border-gray-200">
               <Ionicons
                 name="happy-outline"
                 size={48}
-                className="text-navy-400 mb-4"
+                color="#9CA3AF"
+                style={{ marginBottom: 16 }}
               />
-              <Text className="text-navy-900 text-lg font-semibold mb-2">
+              <Text className="text-gray-900 text-lg font-semibold mb-2">
                 No charges yet!
               </Text>
-              <Text className="text-navy-600 text-base text-center">
+              <Text className="text-gray-600 text-base text-center">
                 Keep up the good work and avoid missing your habits.
               </Text>
             </View>
           ) : (
             <View className="space-y-3">
-              {payments.slice(0, 10).map((payment) => {
-                const habit = habits.find((h) => h.id === payment.habitId);
-                return (
-                  <View
-                    key={payment.id}
-                    className="bg-white rounded-xl p-4 border border-navy-100"
-                  >
-                    <View className="flex-row justify-between items-start mb-2">
-                      <View className="flex-row items-center">
-                        <Ionicons
-                          name="card"
-                          size={20}
-                          className="text-red-500 mr-2"
-                        />
-                        <Text className="text-red-600 text-lg font-bold">
-                          {formatCurrency(payment.amount)}
+              {payments.slice(0, 10).map((payment) => (
+                <View
+                  key={payment.id}
+                  className="bg-gray-50 rounded-2xl p-4 border border-gray-200"
+                >
+                  <View className="flex-row justify-between items-start">
+                    <View className="flex-1">
+                      <Text className="text-gray-900 text-base font-medium">
+                        {payment.reason}
+                      </Text>
+                      <Text className="text-gray-600 text-sm mt-1">
+                        {formatDate(payment.date)}
+                      </Text>
+                      {payment.missReason && (
+                        <Text className="text-gray-500 text-xs mt-1">
+                          Reason: {payment.missReason.reason}
                         </Text>
-                      </View>
-                      <View
-                        className={`px-2 py-1 rounded-full ${
+                      )}
+                    </View>
+                    <View className="items-end">
+                      <Text className="text-red-600 text-lg font-semibold">
+                        -{formatCurrency(payment.amount)}
+                      </Text>
+                      <Text
+                        className={`text-xs font-medium ${
                           payment.status === "completed"
-                            ? "bg-green-100"
-                            : payment.status === "pending"
-                            ? "bg-yellow-100"
-                            : "bg-red-100"
+                            ? "text-green-600"
+                            : payment.status === "failed"
+                            ? "text-red-600"
+                            : "text-orange-600"
                         }`}
                       >
-                        <Text
-                          className={`text-xs font-medium ${
-                            payment.status === "completed"
-                              ? "text-green-700"
-                              : payment.status === "pending"
-                              ? "text-yellow-700"
-                              : "text-red-700"
-                          }`}
-                        >
-                          {payment.status}
-                        </Text>
-                      </View>
+                        {payment.status}
+                      </Text>
                     </View>
-                    <Text className="text-navy-900 text-base font-medium mb-1">
-                      {habit?.title || "Unknown Habit"}
-                    </Text>
-                    <Text className="text-navy-500 text-sm">
-                      {formatDate(payment.date)}
-                    </Text>
                   </View>
-                );
-              })}
+                </View>
+              ))}
             </View>
           )}
         </View>
 
-        <View className="h-20" />
+        <View className="h-8" />
       </ScrollView>
     </View>
   );

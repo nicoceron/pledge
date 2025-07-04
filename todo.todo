@@ -1,13 +1,17 @@
-visuals:
-    - use more pastel colors
-    - use more rounded corners
-    - add an anki like widget to review the habits
+app:
     - create an icon for the app
-    - when I scroll the calendar the one in the middle should be highlighted and selected
-
+    ✔ when I scroll the calendar the one in the middle should be highlighted and selected @done(25-07-04 13:31)
+main:
+    ✔ add a calendar scrolling for user to select a date @done(25-06-24 18:24)
+habits:
+    - add an anki like widget to review the habits @started(25-07-04 13:43)
+    - add anki streak view when clicking on a habit
+    - add a chart view when clicking on a habit
+    - setup an end day for the habit to stop charging
+    - setup reminder schedule for the habit
+    - setup email reminder for the habit
 AI:
-    - Based on the user response on missing task generate recommendations
-    - 
+    - based on the user response on missing task generate recommendations
 payments:
     - add a payment system
     - create restricions on how much to pay
@@ -16,4 +20,18 @@ logging:
     - add a logging system to the app
 calendar:
     - show an anki calendar for each habit
+welcome:
+    - add a welcome screen to the app
+    - add a payment to the welcome screen
+    - add a commitment to the welcome screen
+    - make a simluation of the app to show the user how it works ?
+
+todo commands
+'Cmd/Ctrl+Enter' // Triggers `Todo: Toggle Box`
+'Alt+Enter' // Triggers `Todo: Toggle Box`
+'Alt+D' // Triggers `Todo: Toggle Done`
+'Alt+C' // Triggers `Todo: Toggle Cancelled`
+'Alt+S' // Triggers `Todo: Toggle Start`
+'Cmd/Ctrl+Shift+A' // Triggers  `Todo: Archive`
+
     

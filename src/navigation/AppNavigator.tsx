@@ -6,6 +6,7 @@ import { TabNavigator } from "./TabNavigator";
 import { RootStackParamList } from "../types";
 import { useHabits } from "../hooks/useHabits";
 import { PendingReasonsScreen } from "../screens/PendingReasonsScreen";
+import { HabitDetailScreen } from "../screens/HabitDetailScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -23,6 +24,14 @@ export const AppNavigator: React.FC = () => {
           }}
         >
           <Stack.Screen name="Tabs" component={TabNavigator} />
+          <Stack.Screen
+            name="HabitDetail"
+            component={HabitDetailScreen}
+            options={{
+              headerShown: false,
+              animation: "slide_from_right",
+            }}
+          />
           <Stack.Screen
             name="PendingReasons"
             component={PendingReasonsScreen}

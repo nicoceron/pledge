@@ -9,13 +9,24 @@ import {
   Modal,
   Alert,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useHabits } from "../hooks/useHabits";
 import { HabitCard } from "../components/HabitCard";
 import { generateId } from "../utils";
 import { Habit } from "../types";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../types";
+
+type HabitsScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Tabs"
+>;
 
 export const HabitsScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation<HabitsScreenNavigationProp>();
   const {
     habits,
     loading,
@@ -41,7 +52,6 @@ export const HabitsScreen: React.FC = () => {
     >
   >({
     title: "",
-    description: "",
     frequency: "daily",
     pledgeAmount: 5,
     isActive: true,
@@ -59,20 +69,17 @@ export const HabitsScreen: React.FC = () => {
       ...newHabit,
       id: generateId(),
       title: newHabit.title.trim(),
-      description: newHabit.description.trim(),
       createdAt: new Date(),
       streak: 0,
       completedDates: [],
       missedDates: [],
       totalPledged: 0,
-      pendingReasonDates: [],
       missReasons: {},
     };
 
     await addHabit(habit);
     setNewHabit({
       title: "",
-      description: "",
       frequency: "daily",
       pledgeAmount: 5,
       isActive: true,
@@ -80,8 +87,12 @@ export const HabitsScreen: React.FC = () => {
     setShowAddModal(false);
   };
 
+  const handleHabitPress = (habit: Habit) => {
+    navigation.navigate("HabitDetail", { habitId: habit.id });
+  };
+
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
       <ScrollView
         className="flex-1"
         refreshControl={
@@ -89,15 +100,15 @@ export const HabitsScreen: React.FC = () => {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Summary */}
-        <View className="bg-white mx-4 mt-6 rounded-2xl p-6 shadow-sm">
-          <Text className="text-gray-900 text-2xl font-bold text-center mb-2">
+        {/* Header */}
+        <View className="pt-12 pb-6 px-6">
+          <Text className="text-gray-900 text-3xl font-bold mb-2">
             Your Habits
           </Text>
-          <Text className="text-gray-600 text-lg text-center">
+          <Text className="text-gray-600 text-base">
             {activeHabits.length === 0
               ? "Ready to start your habit journey?"
-              : `${activeHabits.length} active habit${
+              : `Building ${activeHabits.length} great habit${
                   activeHabits.length === 1 ? "" : "s"
                 }`}
           </Text>
@@ -105,14 +116,14 @@ export const HabitsScreen: React.FC = () => {
 
         {/* Habits List */}
         {activeHabits.length === 0 ? (
-          <View className="bg-white mx-4 mt-6 rounded-2xl p-8 items-center shadow-sm">
+          <View className="px-6 py-8 items-center">
             <View className="bg-gray-100 rounded-full w-16 h-16 items-center justify-center mb-6">
               <Ionicons name="add" size={32} color="#374151" />
             </View>
             <Text className="text-gray-900 text-xl font-bold mb-3 text-center">
               Ready to build great habits?
             </Text>
-            <Text className="text-gray-600 text-lg text-center leading-6 mb-8">
+            <Text className="text-gray-600 text-base text-center leading-6 mb-8">
               Start your journey to a better you by creating your first habit
               with gentle accountability
             </Text>
@@ -127,20 +138,20 @@ export const HabitsScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         ) : (
-          <View className="mt-6">
+          <View className="px-6">
             {activeHabits.map((habit) => (
               <HabitCard
                 key={habit.id}
                 habit={habit}
                 onComplete={completeHabit}
                 onMiss={markHabitMissed}
-                // Remove onPress to disable delete functionality
+                onPress={handleHabitPress}
               />
             ))}
           </View>
         )}
 
-        <View className="h-20" />
+        <View className="h-6" />
       </ScrollView>
 
       {/* Floating Add Button */}
@@ -159,7 +170,7 @@ export const HabitsScreen: React.FC = () => {
         animationType="slide"
         presentationStyle="pageSheet"
       >
-        <View className="flex-1 bg-gray-50">
+        <View className="flex-1 bg-white">
           {/* Modal Header */}
           <View className="bg-white px-6 py-4 pt-12 shadow-sm">
             <View className="flex-row justify-between items-center">
@@ -183,31 +194,19 @@ export const HabitsScreen: React.FC = () => {
               <Text className="text-gray-900 text-lg font-semibold mb-3">
                 Habit Name *
               </Text>
-              <TextInput
-                className="bg-white border border-gray-200 rounded-xl p-4 text-gray-900 text-lg"
-                placeholder="e.g., Morning meditation"
-                value={newHabit.title}
-                onChangeText={(text) =>
-                  setNewHabit({ ...newHabit, title: text })
-                }
-              />
-            </View>
-
-            {/* Description */}
-            <View className="mb-6">
-              <Text className="text-gray-900 text-lg font-semibold mb-3">
-                Description (Optional)
-              </Text>
-              <TextInput
-                className="bg-white border border-gray-200 rounded-xl p-4 text-gray-900 text-lg"
-                placeholder="What does this habit involve?"
-                value={newHabit.description}
-                onChangeText={(text) =>
-                  setNewHabit({ ...newHabit, description: text })
-                }
-                multiline
-                numberOfLines={3}
-              />
+              <View className="bg-white border border-gray-200 rounded-xl h-14 justify-center">
+                <TextInput
+                  className="px-4 text-gray-900 text-lg"
+                  placeholder="e.g., Morning meditation"
+                  placeholderTextColor="#6b7280"
+                  value={newHabit.title}
+                  onChangeText={(text) =>
+                    setNewHabit({ ...newHabit, title: text })
+                  }
+                  multiline={false}
+                  style={{ height: 56, fontSize: 18 }}
+                />
+              </View>
             </View>
 
             {/* Frequency */}

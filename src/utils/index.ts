@@ -54,11 +54,8 @@ export const isHabitDueToday = (habit: Habit): boolean => {
     return false;
   }
 
-  // Check if already missed today or pending reason
-  if (
-    habit.missedDates.includes(todayString) ||
-    habit.pendingReasonDates.includes(todayString)
-  ) {
+  // Check if already missed today
+  if (habit.missedDates.includes(todayString)) {
     return false;
   }
 
@@ -120,11 +117,8 @@ export const detectSlippedHabits = (habits: Habit[]): PendingReason[] => {
     slippedDates.forEach((date) => {
       const dateString = getDateString(date);
 
-      // If not already in pending reasons and not already missed with reason
-      if (
-        !habit.pendingReasonDates.includes(dateString) &&
-        !habit.missReasons[dateString]
-      ) {
+      // If not already missed with reason
+      if (!habit.missReasons[dateString]) {
         pendingReasons.push({
           habitId: habit.id,
           date: dateString,
@@ -206,7 +200,6 @@ const shouldMarkAsSlipped = (habit: Habit, date: Date): boolean => {
   return (
     !habit.completedDates.includes(dateString) &&
     !habit.missedDates.includes(dateString) &&
-    !habit.pendingReasonDates.includes(dateString) &&
     date >= habit.createdAt
   );
 };
@@ -229,8 +222,7 @@ export const shouldChargeForMissedHabit = (habit: Habit): boolean => {
   // Already processed today
   if (
     habit.completedDates.includes(todayString) ||
-    habit.missedDates.includes(todayString) ||
-    habit.pendingReasonDates.includes(todayString)
+    habit.missedDates.includes(todayString)
   ) {
     return false;
   }

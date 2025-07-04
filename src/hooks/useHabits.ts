@@ -30,7 +30,6 @@ export const useHabits = () => {
           // Ensure all habits have the new fields
           const updatedHabits = sampleHabits.map((habit) => ({
             ...habit,
-            pendingReasonDates: habit.pendingReasonDates || [],
             missReasons: habit.missReasons || {},
           }));
 
@@ -46,7 +45,6 @@ export const useHabits = () => {
       // Ensure all habits have the new fields
       const updatedHabits = loadedHabits.map((habit) => ({
         ...habit,
-        pendingReasonDates: habit.pendingReasonDates || [],
         missReasons: habit.missReasons || {},
       }));
 
@@ -56,8 +54,6 @@ export const useHabits = () => {
       const slipped = detectSlippedHabits(updatedHabits);
       if (slipped.length > 0) {
         setPendingReasons(slipped);
-        // Mark these dates as pending reasons
-        await markDatesAsPendingReasons(slipped, updatedHabits);
       }
 
       setError(null);
@@ -69,20 +65,6 @@ export const useHabits = () => {
     }
   }, []);
 
-  const markDatesAsPendingReasons = async (
-    pendingList: PendingReason[],
-    currentHabits: Habit[]
-  ) => {
-    for (const pending of pendingList) {
-      const habit = currentHabits.find((h) => h.id === pending.habitId);
-      if (habit) {
-        await updateHabit(pending.habitId, {
-          pendingReasonDates: [...habit.pendingReasonDates, pending.date],
-        });
-      }
-    }
-  };
-
   const addHabit = useCallback(
     async (
       habitData: Omit<
@@ -93,7 +75,6 @@ export const useHabits = () => {
         | "totalPledged"
         | "completedDates"
         | "missedDates"
-        | "pendingReasonDates"
         | "missReasons"
       >
     ) => {
@@ -106,7 +87,6 @@ export const useHabits = () => {
           totalPledged: 0,
           completedDates: [],
           missedDates: [],
-          pendingReasonDates: [],
           missReasons: {},
         };
 
@@ -170,11 +150,8 @@ export const useHabits = () => {
           completedDates: updatedCompletedDates,
           lastCompleted: new Date(),
           streak: newStreak,
-          // Remove from missed dates and pending reasons if it was there
+          // Remove from missed dates if it was there
           missedDates: habit.missedDates.filter((date) => date !== today),
-          pendingReasonDates: habit.pendingReasonDates.filter(
-            (date) => date !== today
-          ),
         });
       } catch (err) {
         setError("Failed to complete habit");
@@ -222,18 +199,14 @@ export const useHabits = () => {
             missedDates: [...habit.missedDates, today],
             missReasons: { ...habit.missReasons, [today]: missReason },
             totalPledged: habit.totalPledged + habit.pledgeAmount,
-            streak: 0, // Reset streak when habit is missed
-            // Remove from pending reasons if it was there
-            pendingReasonDates: habit.pendingReasonDates.filter(
-              (date) => date !== today
-            ),
+            streak: 0, // Reset streak on miss
           });
         } else {
-          // No reason provided, mark as pending
+          // No reason provided - this shouldn't happen anymore since reasons are required
           await updateHabit(habitId, {
-            pendingReasonDates: [...habit.pendingReasonDates, today],
-            // Remove from missed dates if it was there
-            missedDates: habit.missedDates.filter((date) => date !== today),
+            missedDates: [...habit.missedDates, today],
+            totalPledged: habit.totalPledged + habit.pledgeAmount,
+            streak: 0,
           });
         }
       } catch (err) {
@@ -279,10 +252,6 @@ export const useHabits = () => {
           missedDates: [...habit.missedDates, date],
           missReasons: { ...habit.missReasons, [date]: missReason },
           totalPledged: habit.totalPledged + habit.pledgeAmount,
-          pendingReasonDates: habit.pendingReasonDates.filter(
-            (d) => d !== date
-          ),
-          streak: 0, // Reset streak when habit is missed
         });
 
         // Remove from pending reasons
@@ -298,21 +267,21 @@ export const useHabits = () => {
     [habits, updateHabit]
   );
 
-  const getTodaysHabits = useCallback(() => {
-    return habits.filter((habit) => habit.isActive && isHabitDueToday(habit));
-  }, [habits]);
+  const refresh = useCallback(() => {
+    loadHabits();
+  }, [loadHabits]);
 
   const getActiveHabits = useCallback(() => {
     return habits.filter((habit) => habit.isActive);
   }, [habits]);
 
-  const getTotalPledgedAmount = useCallback(() => {
-    return habits.reduce((total, habit) => total + habit.totalPledged, 0);
+  const getHabitsDueToday = useCallback(() => {
+    return habits.filter((habit) => habit.isActive && isHabitDueToday(habit));
   }, [habits]);
 
-  const getPendingReasons = useCallback(() => {
-    return pendingReasons;
-  }, [pendingReasons]);
+  const getTotalPledged = useCallback(() => {
+    return habits.reduce((total, habit) => total + habit.totalPledged, 0);
+  }, [habits]);
 
   useEffect(() => {
     loadHabits();
@@ -329,10 +298,9 @@ export const useHabits = () => {
     completeHabit,
     markHabitMissed,
     provideMissReason,
-    getTodaysHabits,
+    refresh,
     getActiveHabits,
-    getTotalPledgedAmount,
-    getPendingReasons,
-    refresh: loadHabits,
+    getHabitsDueToday,
+    getTotalPledged,
   };
 };

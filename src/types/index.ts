@@ -1,7 +1,6 @@
 export interface Habit {
   id: string;
   title: string;
-  description: string;
   frequency: "daily" | "weekly" | "monthly" | "custom";
   customFrequency?: {
     timesPerWeek?: number;
@@ -15,7 +14,6 @@ export interface Habit {
   totalPledged: number;
   completedDates: string[];
   missedDates: string[];
-  pendingReasonDates: string[]; // Dates that need reasons
   missReasons: { [date: string]: MissReason }; // Date -> reason mapping
 }
 

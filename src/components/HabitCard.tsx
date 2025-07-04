@@ -29,7 +29,6 @@ export const HabitCard: React.FC<HabitCardProps> = ({
   const today = getDateString(new Date());
   const isCompletedToday = habit.completedDates.includes(today);
   const isMissedToday = habit.missedDates.includes(today);
-  const isPendingReasonToday = habit.pendingReasonDates.includes(today);
   const isDueToday = isHabitDueToday(habit);
 
   const handleComplete = () => {
@@ -38,7 +37,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
   };
 
   const handleMiss = () => {
-    if (isMissedToday || isPendingReasonToday) return;
+    if (isMissedToday) return;
 
     Alert.alert(
       `You missed "${habit.title}"`,
@@ -80,11 +79,6 @@ export const HabitCard: React.FC<HabitCardProps> = ({
             );
           },
         },
-        {
-          text: "I'll explain later",
-          style: "cancel",
-          onPress: () => onMiss(habit.id), // No reason provided
-        },
       ]
     );
   };
@@ -110,14 +104,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
         showStatus: true,
       };
     }
-    if (isPendingReasonToday)
-      return {
-        color: "#ea580c",
-        bgColor: "#fff7ed",
-        icon: "time" as const,
-        message: "Needs attention",
-        showStatus: true,
-      };
+
     if (isDueToday)
       return {
         color: "#6b7280",
@@ -136,34 +123,21 @@ export const HabitCard: React.FC<HabitCardProps> = ({
   };
 
   const statusInfo = getStatusInfo();
-  const hasPendingReasons = habit.pendingReasonDates.length > 0;
 
   return (
     <TouchableOpacity
-      className="mx-2 mb-4"
+      className="mb-6"
       onPress={() => onPress?.(habit)}
       activeOpacity={0.7}
     >
-      <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        {hasPendingReasons && (
-          <View className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-4 flex-row items-center">
-            <View className="bg-orange-500 rounded-full p-1 mr-3">
-              <Ionicons name="chatbubble-ellipses" size={16} color="white" />
-            </View>
-            <Text className="text-orange-700 text-base font-medium flex-1">
-              {habit.pendingReasonDates.length} day
-              {habit.pendingReasonDates.length > 1 ? "s" : ""} need your
-              attention
-            </Text>
-          </View>
-        )}
-
-        <View className="flex-row justify-between items-start mb-4">
-          <View className="flex-1 mr-4">
-            <Text className="text-gray-900 text-xl font-bold mb-2">
+      <View className="bg-white rounded-2xl p-6 border border-gray-200">
+        {/* Header Row */}
+        <View className="flex-row items-center justify-between mb-4">
+          <View className="flex-1">
+            <Text className="text-gray-900 text-xl font-bold mb-1">
               {habit.title}
             </Text>
-            <Text className="text-gray-600 text-base capitalize">
+            <Text className="text-gray-500 text-base capitalize">
               {habit.frequency === "custom" &&
               habit.customFrequency?.timesPerWeek
                 ? `${habit.customFrequency.timesPerWeek}x per week`
@@ -171,53 +145,43 @@ export const HabitCard: React.FC<HabitCardProps> = ({
             </Text>
           </View>
           <View
-            className="rounded-full p-3 items-center justify-center"
-            style={{ backgroundColor: statusInfo.bgColor }}
+            className={`w-12 h-12 rounded-lg items-center justify-center ${
+              isCompletedToday
+                ? "bg-green-500"
+                : isMissedToday
+                ? "bg-red-500"
+                : "bg-gray-100"
+            }`}
           >
-            <Ionicons
-              name={statusInfo.icon}
-              size={24}
-              color={statusInfo.color}
-            />
+            {isCompletedToday ? (
+              <Ionicons name="checkmark" size={24} color="white" />
+            ) : isMissedToday ? (
+              <Ionicons name="close" size={24} color="white" />
+            ) : (
+              <View className="w-6 h-6 border-2 border-gray-400 rounded" />
+            )}
           </View>
         </View>
 
-        {habit.description && (
-          <Text className="text-gray-600 text-base mb-4 leading-6">
-            {habit.description}
-          </Text>
-        )}
-
-        <View className="flex-row justify-between mb-6 gap-4">
-          <View className="bg-gray-50 rounded-xl p-4 items-center flex-1">
-            <Text className="text-gray-500 text-sm font-medium mb-1">
-              Current Streak
-            </Text>
-            <Text className="text-gray-900 text-2xl font-bold">
-              {habit.streak}
+        {/* Stats Row */}
+        <View className="flex-row items-center justify-between mb-4">
+          <View className="flex-row items-center">
+            <Ionicons name="flame" size={16} color="#6b7280" />
+            <Text className="text-gray-600 text-base ml-2">
+              {habit.streak} day streak
             </Text>
           </View>
-          <View className="bg-gray-50 rounded-xl p-4 items-center flex-1">
-            <Text className="text-gray-500 text-sm font-medium mb-1">
-              Pledge Amount
-            </Text>
-            <Text className="text-gray-900 text-2xl font-bold">
-              {formatCurrency(habit.pledgeAmount)}
+          <View className="flex-row items-center">
+            <Ionicons name="card" size={16} color="#6b7280" />
+            <Text className="text-gray-600 text-base ml-2">
+              {formatCurrency(habit.pledgeAmount)} pledge
             </Text>
           </View>
         </View>
 
+        {/* Status Message */}
         {statusInfo.showStatus && (
-          <View
-            className="rounded-xl p-3 mb-4 flex-row items-center"
-            style={{ backgroundColor: statusInfo.bgColor }}
-          >
-            <Ionicons
-              name={statusInfo.icon}
-              size={18}
-              color={statusInfo.color}
-              style={{ marginRight: 8 }}
-            />
+          <View className="mb-4">
             <Text
               className="text-base font-medium"
               style={{ color: statusInfo.color }}
@@ -227,23 +191,24 @@ export const HabitCard: React.FC<HabitCardProps> = ({
           </View>
         )}
 
+        {/* Action Buttons */}
         {isDueToday && !isCompletedToday && !isMissedToday && (
           <View className="flex-row gap-3">
             <TouchableOpacity
-              className="flex-1 bg-green-600 rounded-xl py-4 px-6 flex-row items-center justify-center"
+              className="flex-1 bg-green-600 rounded-xl py-4 flex-row items-center justify-center"
               onPress={handleComplete}
             >
               <Ionicons name="checkmark" size={20} color="white" />
-              <Text className="text-white text-lg font-semibold ml-2">
+              <Text className="text-white text-base font-semibold ml-2">
                 Complete
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              className="flex-1 bg-gray-200 rounded-xl py-4 px-6 flex-row items-center justify-center"
+              className="flex-1 bg-gray-200 rounded-xl py-4 flex-row items-center justify-center"
               onPress={handleMiss}
             >
               <Ionicons name="close" size={20} color="#6b7280" />
-              <Text className="text-gray-600 text-lg font-semibold ml-2">
+              <Text className="text-gray-600 text-base font-semibold ml-2">
                 Miss
               </Text>
             </TouchableOpacity>

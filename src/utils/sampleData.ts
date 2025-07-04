@@ -16,7 +16,6 @@ export const generateSampleData = () => {
     {
       id: "habit_1",
       title: "Morning Exercise",
-      description: "Complete 30 minutes of exercise every morning",
       frequency: "daily",
       pledgeAmount: 5,
       isActive: true,
@@ -34,13 +33,11 @@ export const generateSampleData = () => {
         new Date().toISOString().split("T")[0], // Today
       ],
       missedDates: [],
-      pendingReasonDates: [],
       missReasons: {},
     },
     {
       id: "habit_2",
       title: "Read for 1 Hour",
-      description: "Read books for personal development",
       frequency: "daily",
       pledgeAmount: 10,
       isActive: true,
@@ -49,7 +46,6 @@ export const generateSampleData = () => {
       totalPledged: 30,
       completedDates: ["2024-01-02", "2024-01-03", "2024-01-05"],
       missedDates: ["2024-01-04", "2024-01-06"],
-      pendingReasonDates: [],
       missReasons: {
         "2024-01-04": {
           reason: "stressed",
@@ -64,7 +60,6 @@ export const generateSampleData = () => {
     {
       id: "habit_3",
       title: "Meditation",
-      description: "Practice mindfulness meditation",
       frequency: "daily",
       pledgeAmount: 3,
       isActive: true,
@@ -73,9 +68,6 @@ export const generateSampleData = () => {
       totalPledged: 15,
       completedDates: ["2024-01-03", "2024-01-05", "2024-01-06"],
       missedDates: ["2024-01-04"],
-      pendingReasonDates: [
-        "2024-01-07", // Yesterday - pending reason
-      ],
       missReasons: {
         "2024-01-04": {
           reason: "distracted",
@@ -86,7 +78,6 @@ export const generateSampleData = () => {
     {
       id: "habit_4",
       title: "Weekly Gym Session",
-      description: "Attend gym for strength training",
       frequency: "weekly",
       pledgeAmount: 15,
       isActive: true,
@@ -99,7 +90,6 @@ export const generateSampleData = () => {
       missedDates: [
         "2023-12-31", // Previous week
       ],
-      pendingReasonDates: [],
       missReasons: {
         "2023-12-31": {
           reason: "sick",
@@ -110,7 +100,6 @@ export const generateSampleData = () => {
     {
       id: "habit_5",
       title: "Yoga Practice",
-      description: "Practice yoga 3 times per week",
       frequency: "custom",
       customFrequency: {
         timesPerWeek: 3,
@@ -128,7 +117,6 @@ export const generateSampleData = () => {
         "2024-01-08", // Next Monday
       ],
       missedDates: [],
-      pendingReasonDates: [],
       missReasons: {},
     },
   ];
