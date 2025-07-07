@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,7 +13,11 @@ import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { LineChart } from "react-native-chart-kit";
 import { useHabits } from "../hooks/useHabits";
 import { RootStackParamList } from "../types";
-import { formatCurrency, getDateString } from "../utils";
+import {
+  formatCurrency,
+  getDateString,
+  getMissReasonLabel,
+} from "../utils/index";
 
 type HabitDetailRouteProp = RouteProp<RootStackParamList, "HabitDetail">;
 
@@ -21,18 +26,25 @@ export const HabitDetailScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute<HabitDetailRouteProp>();
   const { habitId } = route.params;
-  const { habits, completeHabit, markHabitMissed } = useHabits();
+  const {
+    habits,
+    completeHabit,
+    markHabitMissed,
+    requestCancellation,
+    cancelCancellationRequest,
+    getDaysUntilCancellation,
+  } = useHabits();
 
   const habit = habits.find((h) => h.id === habitId);
 
-  // Generate streak calendar data (last 365 days)
+  // Generate streak calendar data (last 6 months)
   const streakData = useMemo(() => {
     if (!habit) return [];
 
     const days = [];
     const today = new Date();
 
-    for (let i = 364; i >= 0; i--) {
+    for (let i = 172; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
       const dateString = getDateString(date);
@@ -84,6 +96,50 @@ export const HabitDetailScreen: React.FC = () => {
 
   const screenWidth = Dimensions.get("window").width;
 
+  const daysUntilCancellation = useMemo(() => {
+    if (!habit) return null;
+    return getDaysUntilCancellation(habit);
+  }, [habit, getDaysUntilCancellation]);
+
+  const handleCancelHabit = () => {
+    if (!habit) return;
+
+    if (habit.pendingCancellation) {
+      // Show option to undo cancellation
+      Alert.alert(
+        "Cancel Cancellation Request",
+        "Do you want to cancel your cancellation request and keep this habit active?",
+        [
+          {
+            text: "Keep Cancellation Request",
+            style: "cancel",
+          },
+          {
+            text: "Cancel Request",
+            onPress: () => cancelCancellationRequest(habit.id),
+          },
+        ]
+      );
+    } else {
+      // Show cancellation request
+      Alert.alert(
+        "Request Habit Cancellation",
+        "This will request cancellation of your habit. Like Beeminder, there's a one-week delay before the habit is actually cancelled. This gives you time to reconsider and prevents impulsive decisions.\n\nDo you want to proceed?",
+        [
+          {
+            text: "No, Keep Habit",
+            style: "cancel",
+          },
+          {
+            text: "Yes, Request Cancellation",
+            style: "destructive",
+            onPress: () => requestCancellation(habit.id),
+          },
+        ]
+      );
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
@@ -131,6 +187,7 @@ export const HabitDetailScreen: React.FC = () => {
         </View>
       </View>
 
+      {/* ScrollView */}
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Habit Info */}
         <View className="px-6 py-6 border-b border-gray-100">
@@ -152,6 +209,37 @@ export const HabitDetailScreen: React.FC = () => {
             </View>
           </View>
         </View>
+
+        {/* Pending Cancellation Warning */}
+        {habit.pendingCancellation && (
+          <View className="px-6 py-4 bg-orange-50 border-b border-orange-200">
+            <View className="flex-row items-center mb-2">
+              <Ionicons name="warning" size={20} color="#f59e0b" />
+              <Text className="text-orange-800 text-lg font-bold ml-2">
+                Cancellation Pending
+              </Text>
+            </View>
+            <Text className="text-orange-700 text-base mb-2">
+              This habit will be cancelled in{" "}
+              <Text className="font-semibold">
+                {daysUntilCancellation === 0
+                  ? "less than 1 day"
+                  : `${daysUntilCancellation} day${
+                      daysUntilCancellation === 1 ? "" : "s"
+                    }`}
+              </Text>
+              .
+            </Text>
+            <TouchableOpacity
+              className="bg-orange-600 rounded-lg py-2 px-4 self-start"
+              onPress={handleCancelHabit}
+            >
+              <Text className="text-white text-sm font-medium">
+                Cancel Cancellation Request
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Stats Cards */}
         <View className="px-6 py-6 border-b border-gray-100">
@@ -180,14 +268,18 @@ export const HabitDetailScreen: React.FC = () => {
         {/* Streak Calendar */}
         <View className="px-6 py-6 border-b border-gray-100">
           <Text className="text-gray-900 text-xl font-bold mb-4">
-            Year Overview
+            6 Month Overview
           </Text>
 
           {/* Calendar Grid */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            scrollEnabled={false}
+          >
             <View className="flex-row">
               {/* Generate weeks */}
-              {Array.from({ length: 53 }).map((_, weekIndex) => (
+              {Array.from({ length: 26 }).map((_, weekIndex) => (
                 <View key={weekIndex} className="mr-1">
                   {/* Generate days of the week */}
                   {Array.from({ length: 7 }).map((_, dayIndex) => {
@@ -214,87 +306,208 @@ export const HabitDetailScreen: React.FC = () => {
 
           {/* Month labels */}
           <View className="flex-row justify-between mt-2 px-1">
-            {[
-              "Jan",
-              "Feb",
-              "Mar",
-              "Apr",
-              "May",
-              "Jun",
-              "Jul",
-              "Aug",
-              "Sep",
-              "Oct",
-              "Nov",
-              "Dec",
-            ].map((month, index) => (
-              <Text key={index} className="text-xs text-gray-500">
-                {month}
-              </Text>
-            ))}
+            {(() => {
+              const months = [
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec",
+              ];
+              const today = new Date();
+              const last6Months = [];
+              for (let i = 5; i >= 0; i--) {
+                const date = new Date(today);
+                date.setMonth(date.getMonth() - i);
+                last6Months.push(months[date.getMonth()]);
+              }
+              return last6Months.map((month, index) => (
+                <Text key={index} className="text-xs text-gray-500">
+                  {month}
+                </Text>
+              ));
+            })()}
           </View>
 
           {/* Legend */}
           <View className="flex-row justify-center mt-4 gap-6">
             <View className="flex-row items-center">
-              <View className="w-3 h-3 bg-gray-300 rounded-sm mr-2" />
+              <View className="w-2 h-2 bg-gray-300 rounded-sm mr-2" />
               <Text className="text-gray-600 text-sm">None</Text>
             </View>
             <View className="flex-row items-center">
-              <View className="w-3 h-3 bg-green-500 rounded-sm mr-2" />
+              <View className="w-2 h-2 bg-green-500 rounded-sm mr-2" />
               <Text className="text-gray-600 text-sm">Completed</Text>
             </View>
             <View className="flex-row items-center">
-              <View className="w-3 h-3 bg-red-500 rounded-sm mr-2" />
+              <View className="w-2 h-2 bg-red-500 rounded-sm mr-2" />
               <Text className="text-gray-600 text-sm">Missed</Text>
             </View>
           </View>
         </View>
 
-        {/* Chart */}
-        <View className="px-6 py-6">
-          <Text className="text-gray-900 text-xl font-bold mb-4">
-            7-Day Trend
-          </Text>
-          <LineChart
-            data={{
-              labels: ["6d", "5d", "4d", "3d", "2d", "1d", "Today"],
-              datasets: [
-                {
-                  data: chartData,
-                  color: (opacity = 1) => `rgba(16, 185, 129, ${opacity})`,
-                  strokeWidth: 3,
-                },
-              ],
-            }}
-            width={screenWidth - 48}
-            height={220}
-            yAxisInterval={1}
-            chartConfig={{
-              backgroundColor: "#ffffff",
-              backgroundGradientFrom: "#ffffff",
-              backgroundGradientTo: "#ffffff",
-              decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(16, 185, 129, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(107, 114, 128, ${opacity})`,
-              style: {
-                borderRadius: 16,
-              },
-              propsForDots: {
-                r: "6",
-                strokeWidth: "2",
-                stroke: "#10b981",
-              },
-              propsForLabels: {
-                fontSize: 12,
-              },
-            }}
-            bezier
-            style={{
-              borderRadius: 16,
-            }}
-          />
-        </View>
+        {/* Missed Habits Justification */}
+        {habit.missedDates.length > 0 && (
+          <View className="px-6 py-6">
+            <Text className="text-gray-900 text-xl font-bold mb-4">
+              Missed Days - Provide Justification
+            </Text>
+            <Text className="text-gray-600 text-base mb-4">
+              Help us understand what happened on these days. Transparency
+              builds trust and accountability.
+            </Text>
+
+            {habit.missedDates
+              .slice(-10)
+              .reverse()
+              .map((missedDate) => {
+                const missReason = habit.missReasons[missedDate];
+                const dateObj = new Date(missedDate);
+                const formattedDate = dateObj.toLocaleDateString("en-US", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                });
+
+                return (
+                  <View
+                    key={missedDate}
+                    className="bg-red-50 rounded-xl p-4 mb-3 border border-red-100"
+                  >
+                    <View className="flex-row items-center justify-between mb-2">
+                      <Text className="text-red-800 font-semibold text-base">
+                        {formattedDate}
+                      </Text>
+                      <View className="bg-red-500 rounded-full px-3 py-1">
+                        <Text className="text-white text-xs font-medium">
+                          {formatCurrency(habit.pledgeAmount)} charged
+                        </Text>
+                      </View>
+                    </View>
+
+                    {missReason ? (
+                      <View>
+                        <Text className="text-red-700 text-sm mb-1">
+                          Reason: {getMissReasonLabel(missReason.reason)}
+                        </Text>
+                        {missReason.customReason && (
+                          <Text className="text-red-600 text-sm italic">
+                            "{missReason.customReason}"
+                          </Text>
+                        )}
+                        <Text className="text-red-500 text-xs mt-1">
+                          Submitted:{" "}
+                          {new Date(missReason.timestamp).toLocaleDateString()}
+                        </Text>
+                      </View>
+                    ) : (
+                      <View>
+                        <Text className="text-red-700 text-sm mb-2">
+                          ⚠️ No justification provided yet
+                        </Text>
+                        <TouchableOpacity
+                          className="bg-red-600 rounded-lg py-2 px-4 self-start"
+                          onPress={() => {
+                            // This would typically open a modal to add justification
+                            // For now, we'll show an alert
+                            Alert.alert(
+                              "Add Justification",
+                              "Explain why you missed this habit to maintain accountability.",
+                              [
+                                {
+                                  text: "Stressed/Overwhelmed",
+                                  onPress: () =>
+                                    markHabitMissed(habit.id, "stressed"),
+                                },
+                                {
+                                  text: "Got Distracted",
+                                  onPress: () =>
+                                    markHabitMissed(habit.id, "distracted"),
+                                },
+                                {
+                                  text: "Ran Out of Time",
+                                  onPress: () =>
+                                    markHabitMissed(habit.id, "no_time"),
+                                },
+                                {
+                                  text: "Not Feeling Well",
+                                  onPress: () =>
+                                    markHabitMissed(habit.id, "sick"),
+                                },
+                                {
+                                  text: "Emergency Situation",
+                                  onPress: () =>
+                                    markHabitMissed(habit.id, "emergency"),
+                                },
+                                {
+                                  text: "Custom Reason",
+                                  onPress: () => {
+                                    Alert.prompt(
+                                      "Custom Justification",
+                                      "Provide a detailed explanation:",
+                                      (text: string | undefined) => {
+                                        if (text && text.trim()) {
+                                          markHabitMissed(
+                                            habit.id,
+                                            "other",
+                                            text.trim()
+                                          );
+                                        }
+                                      }
+                                    );
+                                  },
+                                },
+                                { text: "Cancel", style: "cancel" },
+                              ]
+                            );
+                          }}
+                        >
+                          <Text className="text-white text-sm font-medium">
+                            Add Justification
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+
+            {habit.missedDates.length > 10 && (
+              <Text className="text-gray-500 text-sm text-center mt-2">
+                Showing last 10 missed days. Total missed:{" "}
+                {habit.missedDates.length}
+              </Text>
+            )}
+          </View>
+        )}
+
+        {/* Cancel Habit Section */}
+        {!habit.pendingCancellation && (
+          <View className="px-6 py-6">
+            <Text className="text-gray-900 text-xl font-bold mb-4">
+              Habit Management
+            </Text>
+            <Text className="text-gray-600 text-base mb-4">
+              Need to cancel this habit? Like Beeminder, we use a one-week delay
+              to prevent impulsive decisions and give you time to reconsider.
+            </Text>
+            <TouchableOpacity
+              className="bg-red-600 rounded-lg py-3 px-6 self-start"
+              onPress={handleCancelHabit}
+            >
+              <Text className="text-white text-base font-medium">
+                Request Habit Cancellation
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <View className="h-6" />
       </ScrollView>

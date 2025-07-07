@@ -22,6 +22,9 @@ export class StorageService {
         lastCompleted: habit.lastCompleted
           ? new Date(habit.lastCompleted)
           : undefined,
+        cancellationRequestedAt: habit.cancellationRequestedAt
+          ? new Date(habit.cancellationRequestedAt)
+          : undefined,
       }));
     } catch (error) {
       console.error("Error getting habits:", error);

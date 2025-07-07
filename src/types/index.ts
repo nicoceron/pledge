@@ -5,9 +5,15 @@ export interface Habit {
   customFrequency?: {
     timesPerWeek?: number;
     daysOfWeek?: number[]; // 0=Sunday, 1=Monday, etc.
+    intervalDays?: number; // For "every X days"
+    timesPerMonth?: number; // For "X times per month"
+    timesInPeriod?: number; // For "X times in Y days"
+    periodDays?: number; // For "X times in Y days"
   };
   pledgeAmount: number;
   isActive: boolean;
+  pendingCancellation?: boolean;
+  cancellationRequestedAt?: Date;
   createdAt: Date;
   lastCompleted?: Date;
   streak: number;

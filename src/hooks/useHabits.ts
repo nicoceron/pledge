@@ -8,7 +8,7 @@ import {
   isHabitDueToday,
   calculateStreak,
   detectSlippedHabits,
-} from "../utils";
+} from "../utils/index";
 
 export const useHabits = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
@@ -267,6 +267,92 @@ export const useHabits = () => {
     [habits, updateHabit]
   );
 
+  const requestCancellation = useCallback(
+    async (habitId: string) => {
+      try {
+        const habit = habits.find((h) => h.id === habitId);
+        if (!habit) return;
+
+        if (habit.pendingCancellation) {
+          // Already requested cancellation
+          return;
+        }
+
+        await updateHabit(habitId, {
+          pendingCancellation: true,
+          cancellationRequestedAt: new Date(),
+        });
+      } catch (err) {
+        setError("Failed to request habit cancellation");
+        console.error(err);
+        throw err;
+      }
+    },
+    [habits, updateHabit]
+  );
+
+  const cancelCancellationRequest = useCallback(
+    async (habitId: string) => {
+      try {
+        await updateHabit(habitId, {
+          pendingCancellation: false,
+          cancellationRequestedAt: undefined,
+        });
+      } catch (err) {
+        setError("Failed to cancel cancellation request");
+        console.error(err);
+        throw err;
+      }
+    },
+    [updateHabit]
+  );
+
+  const processPendingCancellations = useCallback(async () => {
+    try {
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      const habitsToCancel = habits.filter(
+        (habit) =>
+          habit.pendingCancellation &&
+          habit.cancellationRequestedAt &&
+          habit.cancellationRequestedAt <= oneWeekAgo
+      );
+
+      for (const habit of habitsToCancel) {
+        await updateHabit(habit.id, {
+          isActive: false,
+          pendingCancellation: false,
+          cancellationRequestedAt: undefined,
+        });
+      }
+
+      if (habitsToCancel.length > 0) {
+        console.log(`Processed ${habitsToCancel.length} pending cancellations`);
+      }
+    } catch (err) {
+      console.error("Error processing pending cancellations:", err);
+    }
+  }, [habits, updateHabit]);
+
+  const getDaysUntilCancellation = useCallback(
+    (habit: Habit): number | null => {
+      if (!habit.pendingCancellation || !habit.cancellationRequestedAt) {
+        return null;
+      }
+
+      const now = new Date();
+      const cancellationDate = new Date(habit.cancellationRequestedAt);
+      cancellationDate.setDate(cancellationDate.getDate() + 7);
+
+      const daysRemaining = Math.ceil(
+        (cancellationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      return Math.max(0, daysRemaining);
+    },
+    []
+  );
+
   const refresh = useCallback(() => {
     loadHabits();
   }, [loadHabits]);
@@ -287,6 +373,13 @@ export const useHabits = () => {
     loadHabits();
   }, [loadHabits]);
 
+  // Process pending cancellations when habits are loaded
+  useEffect(() => {
+    if (!loading && habits.length > 0) {
+      processPendingCancellations();
+    }
+  }, [loading, habits.length, processPendingCancellations]);
+
   return {
     habits,
     loading,
@@ -298,6 +391,10 @@ export const useHabits = () => {
     completeHabit,
     markHabitMissed,
     provideMissReason,
+    requestCancellation,
+    cancelCancellationRequest,
+    processPendingCancellations,
+    getDaysUntilCancellation,
     refresh,
     getActiveHabits,
     getHabitsDueToday,

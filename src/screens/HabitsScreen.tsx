@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useHabits } from "../hooks/useHabits";
 import { HabitCard } from "../components/HabitCard";
-import { generateId } from "../utils";
+import { generateId } from "../utils/index";
 import { Habit } from "../types";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -53,9 +53,17 @@ export const HabitsScreen: React.FC = () => {
   >({
     title: "",
     frequency: "daily",
+    customFrequency: {},
     pledgeAmount: 5,
     isActive: true,
   });
+
+  // Separate state for input values
+  const [intervalDays, setIntervalDays] = useState("3");
+  const [timesPerWeek, setTimesPerWeek] = useState("3");
+  const [timesPerMonth, setTimesPerMonth] = useState("10");
+  const [timesInPeriod, setTimesInPeriod] = useState("3");
+  const [periodDays, setPeriodDays] = useState("14");
 
   const activeHabits = getActiveHabits();
 
@@ -81,9 +89,15 @@ export const HabitsScreen: React.FC = () => {
     setNewHabit({
       title: "",
       frequency: "daily",
+      customFrequency: {},
       pledgeAmount: 5,
       isActive: true,
     });
+    setIntervalDays("3");
+    setTimesPerWeek("3");
+    setTimesPerMonth("10");
+    setTimesInPeriod("3");
+    setPeriodDays("14");
     setShowAddModal(false);
   };
 
@@ -214,31 +228,265 @@ export const HabitsScreen: React.FC = () => {
               <Text className="text-gray-900 text-lg font-semibold mb-3">
                 Frequency
               </Text>
-              <View className="flex-row gap-3">
-                {["daily", "weekly"].map((freq) => (
-                  <TouchableOpacity
-                    key={freq}
-                    className={`flex-1 rounded-xl p-4 border-2 ${
-                      newHabit.frequency === freq
-                        ? "bg-gray-900 border-gray-900"
-                        : "bg-white border-gray-200"
-                    }`}
-                    onPress={() =>
-                      setNewHabit({ ...newHabit, frequency: freq as any })
-                    }
-                  >
-                    <Text
-                      className={`text-lg font-medium text-center capitalize ${
-                        newHabit.frequency === freq
-                          ? "text-white"
-                          : "text-gray-900"
-                      }`}
-                    >
-                      {freq}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+
+              {/* Every day */}
+              <TouchableOpacity
+                className="flex-row items-center mb-4"
+                onPress={() =>
+                  setNewHabit({
+                    ...newHabit,
+                    frequency: "daily",
+                    customFrequency: {},
+                  })
+                }
+              >
+                <View
+                  className={`w-6 h-6 rounded-full border-2 items-center justify-center mr-4 ${
+                    newHabit.frequency === "daily"
+                      ? "border-blue-500 bg-blue-500"
+                      : "border-gray-300"
+                  }`}
+                >
+                  {newHabit.frequency === "daily" && (
+                    <View className="w-2 h-2 bg-white rounded-full" />
+                  )}
+                </View>
+                <Text className="text-gray-900 text-lg">Every day</Text>
+              </TouchableOpacity>
+
+              {/* Every X days */}
+              <TouchableOpacity
+                className="flex-row items-center mb-4"
+                onPress={() =>
+                  setNewHabit({
+                    ...newHabit,
+                    frequency: "custom",
+                    customFrequency: {
+                      intervalDays: parseInt(intervalDays) || 3,
+                    },
+                  })
+                }
+              >
+                <View
+                  className={`w-6 h-6 rounded-full border-2 items-center justify-center mr-4 ${
+                    newHabit.frequency === "custom" &&
+                    newHabit.customFrequency?.intervalDays
+                      ? "border-blue-500 bg-blue-500"
+                      : "border-gray-300"
+                  }`}
+                >
+                  {newHabit.frequency === "custom" &&
+                    newHabit.customFrequency?.intervalDays && (
+                      <View className="w-2 h-2 bg-white rounded-full" />
+                    )}
+                </View>
+                <View className="flex-row items-center flex-1">
+                  <Text className="text-gray-900 text-lg">Every</Text>
+                  <View className="bg-white border border-gray-200 rounded-lg mx-3 w-16 h-12 justify-center">
+                    <TextInput
+                      className="text-gray-900 text-lg"
+                      placeholder="3"
+                      placeholderTextColor="#9ca3af"
+                      value={intervalDays}
+                      onChangeText={setIntervalDays}
+                      keyboardType="numeric"
+                      maxLength={2}
+                      textAlign="center"
+                      onFocus={() => {
+                        setNewHabit({
+                          ...newHabit,
+                          frequency: "custom",
+                          customFrequency: {
+                            intervalDays: parseInt(intervalDays) || 3,
+                          },
+                        });
+                      }}
+                    />
+                  </View>
+                  <Text className="text-gray-900 text-lg">days</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* X times per week */}
+              <TouchableOpacity
+                className="flex-row items-center mb-4"
+                onPress={() =>
+                  setNewHabit({
+                    ...newHabit,
+                    frequency: "custom",
+                    customFrequency: {
+                      timesPerWeek: parseInt(timesPerWeek) || 3,
+                    },
+                  })
+                }
+              >
+                <View
+                  className={`w-6 h-6 rounded-full border-2 items-center justify-center mr-4 ${
+                    newHabit.frequency === "custom" &&
+                    newHabit.customFrequency?.timesPerWeek
+                      ? "border-blue-500 bg-blue-500"
+                      : "border-gray-300"
+                  }`}
+                >
+                  {newHabit.frequency === "custom" &&
+                    newHabit.customFrequency?.timesPerWeek && (
+                      <View className="w-2 h-2 bg-white rounded-full" />
+                    )}
+                </View>
+                <View className="flex-row items-center flex-1">
+                  <View className="bg-white border border-gray-200 rounded-lg mr-3 w-16 h-12 justify-center">
+                    <TextInput
+                      className="text-gray-900 text-lg"
+                      placeholder="3"
+                      placeholderTextColor="#9ca3af"
+                      value={timesPerWeek}
+                      onChangeText={setTimesPerWeek}
+                      keyboardType="numeric"
+                      maxLength={1}
+                      textAlign="center"
+                      onFocus={() => {
+                        setNewHabit({
+                          ...newHabit,
+                          frequency: "custom",
+                          customFrequency: {
+                            timesPerWeek: parseInt(timesPerWeek) || 3,
+                          },
+                        });
+                      }}
+                    />
+                  </View>
+                  <Text className="text-gray-900 text-lg">times per week</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* X times per month */}
+              <TouchableOpacity
+                className="flex-row items-center mb-4"
+                onPress={() =>
+                  setNewHabit({
+                    ...newHabit,
+                    frequency: "custom",
+                    customFrequency: {
+                      timesPerMonth: parseInt(timesPerMonth) || 10,
+                    },
+                  })
+                }
+              >
+                <View
+                  className={`w-6 h-6 rounded-full border-2 items-center justify-center mr-4 ${
+                    newHabit.frequency === "custom" &&
+                    newHabit.customFrequency?.timesPerMonth
+                      ? "border-blue-500 bg-blue-500"
+                      : "border-gray-300"
+                  }`}
+                >
+                  {newHabit.frequency === "custom" &&
+                    newHabit.customFrequency?.timesPerMonth && (
+                      <View className="w-2 h-2 bg-white rounded-full" />
+                    )}
+                </View>
+                <View className="flex-row items-center flex-1">
+                  <View className="bg-white border border-gray-200 rounded-lg mr-3 w-16 h-12 justify-center">
+                    <TextInput
+                      className="text-gray-900 text-lg"
+                      placeholder="10"
+                      placeholderTextColor="#9ca3af"
+                      value={timesPerMonth}
+                      onChangeText={setTimesPerMonth}
+                      keyboardType="numeric"
+                      maxLength={2}
+                      textAlign="center"
+                      onFocus={() => {
+                        setNewHabit({
+                          ...newHabit,
+                          frequency: "custom",
+                          customFrequency: {
+                            timesPerMonth: parseInt(timesPerMonth) || 10,
+                          },
+                        });
+                      }}
+                    />
+                  </View>
+                  <Text className="text-gray-900 text-lg">times per month</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* X times in Y days */}
+              <TouchableOpacity
+                className="flex-row items-center mb-4"
+                onPress={() =>
+                  setNewHabit({
+                    ...newHabit,
+                    frequency: "custom",
+                    customFrequency: {
+                      timesInPeriod: parseInt(timesInPeriod) || 3,
+                      periodDays: parseInt(periodDays) || 14,
+                    },
+                  })
+                }
+              >
+                <View
+                  className={`w-6 h-6 rounded-full border-2 items-center justify-center mr-4 ${
+                    newHabit.frequency === "custom" &&
+                    newHabit.customFrequency?.timesInPeriod
+                      ? "border-blue-500 bg-blue-500"
+                      : "border-gray-300"
+                  }`}
+                >
+                  {newHabit.frequency === "custom" &&
+                    newHabit.customFrequency?.timesInPeriod && (
+                      <View className="w-2 h-2 bg-white rounded-full" />
+                    )}
+                </View>
+                <View className="flex-row items-center flex-1 flex-wrap">
+                  <View className="bg-white border border-gray-200 rounded-lg mr-3 w-16 h-12 justify-center">
+                    <TextInput
+                      className="text-gray-900 text-lg"
+                      placeholder="3"
+                      placeholderTextColor="#9ca3af"
+                      value={timesInPeriod}
+                      onChangeText={setTimesInPeriod}
+                      keyboardType="numeric"
+                      maxLength={2}
+                      textAlign="center"
+                      onFocus={() => {
+                        setNewHabit({
+                          ...newHabit,
+                          frequency: "custom",
+                          customFrequency: {
+                            timesInPeriod: parseInt(timesInPeriod) || 3,
+                            periodDays: parseInt(periodDays) || 14,
+                          },
+                        });
+                      }}
+                    />
+                  </View>
+                  <Text className="text-gray-900 text-lg mr-3">times in</Text>
+                  <View className="bg-white border border-gray-200 rounded-lg mr-3 w-16 h-12 justify-center">
+                    <TextInput
+                      className="text-gray-900 text-lg"
+                      placeholder="14"
+                      placeholderTextColor="#9ca3af"
+                      value={periodDays}
+                      onChangeText={setPeriodDays}
+                      keyboardType="numeric"
+                      maxLength={2}
+                      textAlign="center"
+                      onFocus={() => {
+                        setNewHabit({
+                          ...newHabit,
+                          frequency: "custom",
+                          customFrequency: {
+                            timesInPeriod: parseInt(timesInPeriod) || 3,
+                            periodDays: parseInt(periodDays) || 14,
+                          },
+                        });
+                      }}
+                    />
+                  </View>
+                  <Text className="text-gray-900 text-lg">days</Text>
+                </View>
+              </TouchableOpacity>
             </View>
 
             {/* Pledge Amount */}

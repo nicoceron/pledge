@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHabits } from "../hooks/useHabits";
 import { RootStackParamList } from "../types";
 import Calendar from "../components/Calendar";
+import { isHabitDueToday } from "../utils/index";
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 // Set today to 00:00:00
@@ -40,9 +41,12 @@ export const HomeScreen: React.FC = () => {
   const getHabitsForDate = (date: Date) => {
     const activeHabits = getActiveHabits();
     return activeHabits.filter((habit) => {
+      // For now, use simple logic based on frequency types
+      // This could be enhanced to use a date-specific version of isHabitDueToday
       switch (habit.frequency) {
         case "daily":
           return true;
+
         case "weekly":
           const createdDay = habit.createdAt.getDay();
           return date.getDay() === createdDay;
@@ -53,7 +57,7 @@ export const HomeScreen: React.FC = () => {
           if (habit.customFrequency?.daysOfWeek) {
             return habit.customFrequency.daysOfWeek.includes(date.getDay());
           }
-          return false;
+          return true;
         default:
           return false;
       }

@@ -1,4 +1,4 @@
-import { Habit, HabitLog, MissReason, PendingReason } from "../types";
+import { Habit, MissReason, PendingReason } from "../types";
 
 export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat("en-US", {
@@ -8,12 +8,12 @@ export const formatCurrency = (amount: number): string => {
 };
 
 export const formatDate = (date: Date): string => {
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
     year: "numeric",
-    month: "short",
+    month: "long",
     day: "numeric",
-  });
+  }).format(date);
 };
 
 export const getDateString = (date: Date): string => {
@@ -26,15 +26,17 @@ export const isToday = (date: Date): boolean => {
 };
 
 export const getStartOfWeek = (date: Date): Date => {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day;
-  return new Date(d.setDate(diff));
+  const start = new Date(date);
+  start.setDate(date.getDate() - date.getDay());
+  start.setHours(0, 0, 0, 0);
+  return start;
 };
 
 export const getEndOfWeek = (date: Date): Date => {
-  const startOfWeek = getStartOfWeek(date);
-  return new Date(startOfWeek.getTime() + 6 * 24 * 60 * 60 * 1000);
+  const end = new Date(date);
+  end.setDate(date.getDate() - date.getDay() + 6);
+  end.setHours(23, 59, 59, 999);
+  return end;
 };
 
 export const getStartOfMonth = (date: Date): Date => {
@@ -45,36 +47,104 @@ export const getEndOfMonth = (date: Date): Date => {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 };
 
-export const isHabitDueToday = (habit: Habit): boolean => {
-  const today = new Date();
+export const isHabitDueToday = (
+  habit: Habit,
+  today: Date = new Date()
+): boolean => {
   const todayString = getDateString(today);
 
-  // Check if already completed today
-  if (habit.completedDates.includes(todayString)) {
-    return false;
-  }
-
-  // Check if already missed today
-  if (habit.missedDates.includes(todayString)) {
+  // Don't show habits that are already completed or missed today
+  if (
+    habit.completedDates.includes(todayString) ||
+    habit.missedDates.includes(todayString)
+  ) {
     return false;
   }
 
   switch (habit.frequency) {
     case "daily":
       return true;
+
     case "weekly":
       // Due on the same day of week as created
       const createdDay = habit.createdAt.getDay();
       return today.getDay() === createdDay;
+
     case "monthly":
       // Due on the same date of month as created
       const createdDate = habit.createdAt.getDate();
       return today.getDate() === createdDate;
+
     case "custom":
+      // Handle interval days (every X days)
+      if (habit.customFrequency?.intervalDays) {
+        const intervalDays = habit.customFrequency.intervalDays;
+        const daysSinceCreation = Math.floor(
+          (today.getTime() - habit.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        return daysSinceCreation % intervalDays === 0;
+      }
+
+      // Handle X times per week
+      if (habit.customFrequency?.timesPerWeek) {
+        const timesPerWeek = habit.customFrequency.timesPerWeek;
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay());
+        weekStart.setHours(0, 0, 0, 0);
+
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
+
+        const completedThisWeek = habit.completedDates.filter((dateStr) => {
+          const date = new Date(dateStr);
+          return date >= weekStart && date <= weekEnd;
+        }).length;
+
+        return completedThisWeek < timesPerWeek;
+      }
+
+      // Handle X times per month
+      if (habit.customFrequency?.timesPerMonth) {
+        const timesPerMonth = habit.customFrequency.timesPerMonth;
+        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+        const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+        const completedThisMonth = habit.completedDates.filter((dateStr) => {
+          const date = new Date(dateStr);
+          return date >= monthStart && date <= monthEnd;
+        }).length;
+
+        return completedThisMonth < timesPerMonth;
+      }
+
+      // Handle X times in Y days using sliding window
+      if (
+        habit.customFrequency?.timesInPeriod &&
+        habit.customFrequency?.periodDays
+      ) {
+        const timesInPeriod = habit.customFrequency.timesInPeriod;
+        const periodDays = habit.customFrequency.periodDays;
+
+        const periodStart = new Date(today);
+        periodStart.setDate(today.getDate() - periodDays + 1);
+        periodStart.setHours(0, 0, 0, 0);
+
+        const completedInPeriod = habit.completedDates.filter((dateStr) => {
+          const date = new Date(dateStr);
+          return date >= periodStart && date <= today;
+        }).length;
+
+        return completedInPeriod < timesInPeriod;
+      }
+
+      // Handle specific days of week
       if (habit.customFrequency?.daysOfWeek) {
         return habit.customFrequency.daysOfWeek.includes(today.getDay());
       }
+
       return false;
+
     default:
       return false;
   }
@@ -252,4 +322,42 @@ export const getMissReasonLabel = (reason: MissReason["reason"]): string => {
 
 export const generateId = (): string => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
+
+export const formatFrequencyDisplay = (habit: Habit): string => {
+  switch (habit.frequency) {
+    case "daily":
+      return "Daily";
+
+    case "weekly":
+      return "Weekly";
+
+    case "monthly":
+      return "Monthly";
+
+    case "custom":
+      if (habit.customFrequency?.intervalDays) {
+        const days = habit.customFrequency.intervalDays;
+        return days === 1 ? "Daily" : `Every ${days} days`;
+      }
+      if (habit.customFrequency?.timesPerWeek) {
+        return `${habit.customFrequency.timesPerWeek}x per week`;
+      }
+      if (habit.customFrequency?.timesPerMonth) {
+        return `${habit.customFrequency.timesPerMonth}x per month`;
+      }
+      if (
+        habit.customFrequency?.timesInPeriod &&
+        habit.customFrequency?.periodDays
+      ) {
+        return `${habit.customFrequency.timesInPeriod}x in ${habit.customFrequency.periodDays} days`;
+      }
+      if (habit.customFrequency?.daysOfWeek) {
+        return `${habit.customFrequency.daysOfWeek.length} days/week`;
+      }
+      return "Custom";
+
+    default:
+      return "Unknown";
+  }
 };

@@ -103,7 +103,6 @@ export const generateSampleData = () => {
       frequency: "custom",
       customFrequency: {
         timesPerWeek: 3,
-        daysOfWeek: [1, 3, 5], // Monday, Wednesday, Friday
       },
       pledgeAmount: 8,
       isActive: true,
@@ -115,6 +114,26 @@ export const generateSampleData = () => {
         "2024-01-03", // Wednesday
         "2024-01-05", // Friday
         "2024-01-08", // Next Monday
+      ],
+      missedDates: [],
+      missReasons: {},
+    },
+    {
+      id: "habit_6",
+      title: "Drink Water",
+      frequency: "custom",
+      customFrequency: {
+        intervalDays: 2,
+      },
+      pledgeAmount: 2,
+      isActive: true,
+      createdAt: new Date("2024-01-01"),
+      streak: 2,
+      totalPledged: 4,
+      completedDates: [
+        "2024-01-01", // Day 0
+        "2024-01-03", // Day 2
+        "2024-01-05", // Day 4
       ],
       missedDates: [],
       missReasons: {},

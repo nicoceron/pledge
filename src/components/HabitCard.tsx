@@ -7,7 +7,8 @@ import {
   getDateString,
   isHabitDueToday,
   getMissReasonLabel,
-} from "../utils";
+  formatFrequencyDisplay,
+} from "../utils/index";
 
 interface HabitCardProps {
   habit: Habit;
@@ -137,11 +138,8 @@ export const HabitCard: React.FC<HabitCardProps> = ({
             <Text className="text-gray-900 text-xl font-bold mb-1">
               {habit.title}
             </Text>
-            <Text className="text-gray-500 text-base capitalize">
-              {habit.frequency === "custom" &&
-              habit.customFrequency?.timesPerWeek
-                ? `${habit.customFrequency.timesPerWeek}x per week`
-                : habit.frequency}
+            <Text className="text-gray-500 text-base">
+              {formatFrequencyDisplay(habit)}
             </Text>
           </View>
           <View

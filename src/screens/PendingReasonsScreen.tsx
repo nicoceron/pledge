@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { PendingReason, RootStackParamList, MissReason } from "../types";
 import { useHabits } from "../hooks/useHabits";
-import { formatCurrency, formatDate } from "../utils";
+import { formatCurrency, formatDate } from "../utils/index";
 
 type PendingReasonsRouteProp = RouteProp<RootStackParamList, "PendingReasons">;
 

@@ -4,12 +4,14 @@ app:
 main:
     ✔ add a calendar scrolling for user to select a date @done(25-06-24 18:24)
 habits:
-    - add an anki like widget to review the habits @started(25-07-04 13:43)
-    - add anki streak view when clicking on a habit
-    - add a chart view when clicking on a habit
+    ✔ add an anki like widget to review the habits @started(25-07-04 13:43) @done(25-07-04 14:22) @lasted(39m12s)
+    ✔ add anki streak view when clicking on a habit @done(25-07-07 15:52)
+    ✔ add a chart view when clicking on a habit @done(25-07-07 15:52)
     - setup an end day for the habit to stop charging
     - setup reminder schedule for the habit
     - setup email reminder for the habit
+    ✔ habit gets cancelled within a week should be deleted @started(25-07-07 15:55) @done(25-07-07 16:07) @lasted(12m39s)
+    - custom schedule for the habit @started(25-07-07 16:07)
 AI:
     - based on the user response on missing task generate recommendations
 payments:
